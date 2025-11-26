@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { CreateCollectionModal } from './create-collection-modal';
 
 export const CollectionsList = () => {
-  const { items, folders, addItem, setActiveCollectionId } = useCollectionsStore();
+  const { items, folders, setActiveCollectionId } = useCollectionsStore();
   const { reset, setMethod, setUrl, setParams, setHeaders, setBodyType, setBody, setAuthType, setAuthConfig } = useRequestStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
 

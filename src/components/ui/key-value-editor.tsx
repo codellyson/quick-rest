@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 import { cn } from '../../utils/cn';

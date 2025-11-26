@@ -1,6 +1,5 @@
 import { HttpResponse } from '../../utils/http';
 import { StatusBadge } from '../ui/status-badge';
-import { cn } from '../../utils/cn';
 
 interface ResponseMetaProps {
   response: HttpResponse;

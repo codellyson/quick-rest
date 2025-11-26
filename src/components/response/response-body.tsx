@@ -3,7 +3,6 @@ import { Copy, Check } from 'lucide-react';
 import { HttpResponse } from '../../utils/http';
 import { CodeEditor } from '../ui/code-editor';
 import { Button } from '../ui/button';
-import { cn } from '../../utils/cn';
 
 interface ResponseBodyProps {
   response: HttpResponse;

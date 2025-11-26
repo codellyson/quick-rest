@@ -1,7 +1,6 @@
 import { HttpResponse } from '../../utils/http';
 import { Copy } from 'lucide-react';
 import { Button } from '../ui/button';
-import { cn } from '../../utils/cn';
 
 interface ResponseHeadersProps {
   response: HttpResponse;

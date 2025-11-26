@@ -1,9 +1,7 @@
-import { Trash2, MoreVertical } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { CollectionItem as CollectionItemType } from '../../stores/use-collections-store';
-import { StatusBadge } from '../ui/status-badge';
 import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
-import { useState } from 'react';
 import { useCollectionsStore } from '../../stores/use-collections-store';
 
 interface CollectionItemProps {
@@ -23,7 +21,6 @@ const methodColors: Record<string, string> = {
 
 export const CollectionItem = ({ item, onClick }: CollectionItemProps) => {
   const { deleteItem } = useCollectionsStore();
-  const [showMenu, setShowMenu] = useState(false);
 
   return (
     <div
