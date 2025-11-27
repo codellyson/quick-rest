@@ -6,7 +6,7 @@ export const AuthConfig = () => {
   const { authType, authConfig, setAuthType, setAuthConfig } = useRequestStore();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex gap-2">
         {(['none', 'bearer', 'basic', 'api-key'] as const).map((type) => (
           <button

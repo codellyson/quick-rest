@@ -1,36 +1,42 @@
-import { useRequestStore } from '../../stores/use-request-store';
-import { CodeEditor } from '../ui/code-editor';
-import { cn } from '../../utils/cn';
+import { useRequestStore } from "../../stores/use-request-store";
+import { CodeEditor } from "../ui/code-editor";
+import { cn } from "../../utils/cn";
 
 export const BodyEditor = () => {
   const { bodyType, body, setBodyType, setBody } = useRequestStore();
 
+  // useEffect(() => {
+  //   setBodyType("json");
+  // }, []);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex gap-2">
-        {(['none', 'json', 'raw', 'form-data'] as const).map((type) => (
+        {(["none", "json", "raw", "form-data"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setBodyType(type)}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
+              "px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150",
               bodyType === type
-                ? 'bg-zinc-900 text-white'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                ? "bg-zinc-900 text-white"
+                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
             )}
           >
-            {type === 'form-data' ? 'Form Data' : type.charAt(0).toUpperCase() + type.slice(1)}
+            {type === "form-data"
+              ? "Form Data"
+              : type.charAt(0).toUpperCase() + type.slice(1)}
           </button>
         ))}
       </div>
-      {bodyType !== 'none' && (
+      {bodyType !== "none" && (
         <div>
-          {bodyType === 'json' || bodyType === 'raw' ? (
+          {bodyType === "json" || bodyType === "raw" ? (
             <CodeEditor
               value={body}
-              onChange={(value) => setBody(value || '')}
-              language={bodyType === 'json' ? 'json' : 'text'}
-              height="300px"
+              onChange={(value) => setBody(value || "")}
+              language={bodyType === "json" ? "json" : "text"}
+              height="calc(100vh - 200px)"
             />
           ) : (
             <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900">
@@ -44,4 +50,3 @@ export const BodyEditor = () => {
     </div>
   );
 };
-

@@ -73,8 +73,8 @@ export const Modal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
               {title}
             </h2>
             <Button
@@ -84,11 +84,11 @@ export const Modal = ({
               className="w-8 h-8 p-0"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         )}
-        <div className="p-6">{children}</div>
+        <div className="p-4">{children}</div>
       </div>
     </div>
   );

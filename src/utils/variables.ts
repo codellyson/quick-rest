@@ -1,3 +1,5 @@
+import { KeyValuePair } from "../components/ui/key-value-editor";
+
 export interface Environment {
   id: string;
   name: string;
@@ -16,6 +18,21 @@ export const replaceVariables = (
 export const extractVariables = (text: string): string[] => {
   const matches = text.match(/\{\{(\w+)\}\}/g);
   if (!matches) return [];
-  return matches.map((match) => match.replace(/[{}]/g, ''));
+  return matches.map((match) => match.replace(/[{}]/g, ""));
 };
 
+export const replaceDynamicVariables = (
+  text: string,
+  params: KeyValuePair[]
+): string => {
+  const containsDynamicVariables = text.includes("{{");
+  if (!containsDynamicVariables) return text;
+
+  params.forEach((param) => {
+    if (param.key && param.enabled) {
+      text = text.replace(`{{${param.key}}}`, param.value);
+    }
+  });
+
+  return text;
+};

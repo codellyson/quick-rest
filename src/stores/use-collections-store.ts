@@ -30,6 +30,7 @@ interface CollectionsState {
   items: CollectionItem[];
   folders: CollectionFolder[];
   activeCollectionId: string | null;
+  pendingFolderId: string | null;
   setItems: (items: CollectionItem[]) => void;
   setFolders: (folders: CollectionFolder[]) => void;
   addItem: (item: Omit<CollectionItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -39,6 +40,8 @@ interface CollectionsState {
   updateFolder: (id: string, updates: Partial<CollectionFolder>) => void;
   deleteFolder: (id: string) => void;
   setActiveCollectionId: (id: string | null) => void;
+  setPendingFolderId: (id: string | null) => void;
+  clearAll: () => void;
 }
 
 export const useCollectionsStore = create<CollectionsState>()(
@@ -47,6 +50,7 @@ export const useCollectionsStore = create<CollectionsState>()(
       items: [],
       folders: [],
       activeCollectionId: null,
+      pendingFolderId: null,
       setItems: (items) => set({ items }),
       setFolders: (folders) => set({ folders }),
       addItem: (item) =>
@@ -96,6 +100,8 @@ export const useCollectionsStore = create<CollectionsState>()(
           items: state.items.filter((item) => item.folderId !== id),
         })),
       setActiveCollectionId: (id) => set({ activeCollectionId: id }),
+      setPendingFolderId: (id) => set({ pendingFolderId: id }),
+      clearAll: () => set({ items: [], folders: [], activeCollectionId: null, pendingFolderId: null }),
     }),
     {
       name: 'collections-storage',

@@ -48,4 +48,3 @@ src/
 ## Adding Routes
 
 Create new route files in `src/routes/` following TanStack Router's file-based routing conventions.
-

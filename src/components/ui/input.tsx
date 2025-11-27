@@ -10,7 +10,7 @@ export const Input = ({ label, error, className, ...props }: InputProps) => {
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-0.5">
           {label}
         </label>
       )}

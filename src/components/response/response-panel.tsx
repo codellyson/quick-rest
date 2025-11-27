@@ -51,10 +51,10 @@ export const ResponsePanel = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                'px-4 py-2.5 text-sm font-medium transition-all duration-150',
+                'px-4 py-2.5 text-sm font-medium transition-all duration-150 border-b-2',
                 activeTab === tab
-                  ? 'border-b-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               )}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
