@@ -8,11 +8,15 @@ import { ToastContainer } from "../ui/toast";
  import { ResizableDivider } from "../ui/resizable-divider";
 import { loadConfigFromUrl, applySharedConfig } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
+import { useP2PSync } from "../../hooks/use-p2p-sync";
 
 export const AppLayout = () => {
   const { theme } = useAppStore();
   const { toasts, removeToast, showToast } = useToastStore();
   const [leftPanelWidth, setLeftPanelWidth] = useState<number | null>(null);
+  
+  // Enable P2P sync
+  useP2PSync();
 
   useEffect(() => {
     if (typeof document !== "undefined") {

@@ -1,5 +1,6 @@
-import { useRequestStore } from '../stores/use-request-store';
+import { AuthType, BodyType, useRequestStore } from '../stores/use-request-store';
 import { KeyValuePair } from '../components/ui/key-value-editor';
+import { HttpMethod } from './http';
 
 export interface ShareableRequestConfig {
   method: string;
@@ -81,13 +82,13 @@ export const applySharedConfig = (config: ShareableRequestConfig): void => {
     setAuthConfig,
   } = useRequestStore.getState();
 
-  setMethod(config.method as any);
+  setMethod(config.method as unknown as HttpMethod);
   setUrl(config.url);
   setParams(config.params || []);
   setHeaders(config.headers || []);
-  setBodyType(config.bodyType as any);
+  setBodyType(config.bodyType as BodyType);
   setBody(config.body || '');
-  setAuthType(config.authType as any);
+  setAuthType(config.authType as AuthType);
   setAuthConfig(config.authConfig || {});
 };
 

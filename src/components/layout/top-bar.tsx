@@ -1,4 +1,4 @@
-import { Send, Save, Edit, AlertCircle, Share2, Check } from "lucide-react";
+import { Send, Save, Edit, AlertCircle, Share2, Check, Users } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";
 import { useResponseStore } from "../../stores/use-response-store";
@@ -12,6 +12,8 @@ import { Input } from "../ui/input";
 import { cn } from "../../utils/cn";
 import { generateShareableLink } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
+import { useP2PStore } from "../../stores/use-p2p-store";
+import { P2PConnectionModal } from "../p2p/p2p-connection-modal";
 
 export const TopBar = () => {
   const { send } = useRequest();
@@ -46,6 +48,8 @@ export const TopBar = () => {
     undefined
   );
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [showP2PModal, setShowP2PModal] = useState(false);
+  const { connectionStatus } = useP2PStore();
 
   useEffect(() => {
     const handleOpenSaveModal = (e: Event) => {
@@ -248,8 +252,24 @@ export const TopBar = () => {
               </>
             )}
           </Button>
+          <Button
+            variant={connectionStatus === 'connected' ? 'primary' : 'ghost'}
+            size="sm"
+            onClick={() => setShowP2PModal(true)}
+            title="Peer-to-peer real-time sync"
+            className={cn(
+              connectionStatus === 'connected' && 'animate-pulse'
+            )}
+          >
+            <Users className="w-4 h-4" />
+            {connectionStatus === 'connected' ? 'P2P Connected' : 'P2P'}
+          </Button>
         </div>
       </div>
+      <P2PConnectionModal
+        isOpen={showP2PModal}
+        onClose={() => setShowP2PModal(false)}
+      />
       <Modal
         isOpen={showSaveModal}
         onClose={() => {

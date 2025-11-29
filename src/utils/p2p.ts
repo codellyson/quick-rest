@@ -1,125 +1,165 @@
-import { useP2PStore, PeerConnection } from '../stores/use-p2p-store';
-import { ShareableRequestConfig } from './sharing';
-import { useRequestStore } from '../stores/use-request-store';
+import Peer from "peerjs";
+import type { DataConnection } from "peerjs";
+import { useP2PStore } from "../stores/use-p2p-store";
+import { ShareableRequestConfig, applySharedConfig } from "./sharing";
+import { useRequestStore } from "../stores/use-request-store";
 
-// STUN servers for NAT traversal (free public servers)
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-  ],
-};
+let peerInstance: Peer | null = null;
+let dataConnection: DataConnection | null = null;
 
 /**
- * Generates a random peer ID
+ * Initializes a PeerJS instance
  */
-export const generatePeerId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-};
+export const initializePeer = (peerId?: string): Promise<Peer> => {
+  return new Promise((resolve, reject) => {
+    // Use provided peerId or generate one
+    const id = peerId || undefined;
 
-/**
- * Creates a new WebRTC peer connection
- */
-export const createPeerConnection = (): RTCPeerConnection => {
-  return new RTCPeerConnection(ICE_SERVERS);
-};
+    const peer = new Peer(id!, {
+      host: "0.peerjs.com",
+      port: 443,
+      path: "/",
+      secure: true,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        ],
+      },
+    });
 
-/**
- * Creates a data channel for sending/receiving messages
- */
-export const createDataChannel = (
-  connection: RTCPeerConnection,
-  label: string = 'request-sync'
-): RTCDataChannel => {
-  const channel = connection.createDataChannel(label, {
-    ordered: true,
+    peer.on("open", (id: string) => {
+      console.log("PeerJS opened with ID:", id);
+      peerInstance = peer;
+      useP2PStore.getState().setPeerId(id);
+      resolve(peer);
+    });
+
+    peer.on("error", (error: { type?: string; message?: string }) => {
+      console.error("PeerJS error:", error);
+      if (error?.type === "peer-unavailable") {
+        // Peer ID is already taken, try with a new one
+        console.log("Peer ID unavailable, generating new one...");
+        peer.destroy();
+        initializePeer().then(resolve).catch(reject);
+      } else {
+        reject(error);
+      }
+    });
+
+    peer.on("connection", (conn: DataConnection) => {
+      console.log("Incoming connection from:", conn.peer);
+      handleDataConnection(conn);
+    });
+
+    peer.on("close", () => {
+      console.log("PeerJS connection closed");
+      peerInstance = null;
+      useP2PStore.getState().setConnectionStatus("disconnected");
+    });
+
+    peer.on("disconnected", () => {
+      console.log("PeerJS disconnected, attempting to reconnect...");
+      if (!peer.destroyed) {
+        peer.reconnect();
+      }
+    });
   });
-  return channel;
 };
 
 /**
- * Sets up data channel event handlers
+ * Handles an incoming or outgoing data connection
  */
-export const setupDataChannel = (
-  channel: RTCDataChannel,
-  peerId: string,
-  onMessage: (data: ShareableRequestConfig) => void
-): void => {
-  channel.onopen = () => {
-    console.log(`Data channel opened with peer ${peerId}`);
-    useP2PStore.getState().updatePeerConnection(peerId, {
-      isConnected: true,
-      dataChannel: channel,
-    });
-    useP2PStore.getState().setConnectionStatus('connected');
-  };
+const handleDataConnection = (conn: DataConnection): void => {
+  dataConnection = conn;
 
-  channel.onclose = () => {
-    console.log(`Data channel closed with peer ${peerId}`);
-    useP2PStore.getState().updatePeerConnection(peerId, {
-      isConnected: false,
-      dataChannel: null,
-    });
-  };
+  useP2PStore.getState().setConnectionStatus("connecting");
 
-  channel.onerror = (error) => {
-    console.error(`Data channel error with peer ${peerId}:`, error);
-  };
+  conn.on("open", () => {
+    console.log("Data connection opened");
+    useP2PStore.getState().setConnectionStatus("connected");
+  });
 
-  channel.onmessage = (event) => {
+  conn.on("data", (data: unknown) => {
     try {
-      const config = JSON.parse(event.data) as ShareableRequestConfig;
-      onMessage(config);
+      const config = data as ShareableRequestConfig;
+      console.log("Received config from peer:", config);
+      applySharedConfig(config);
     } catch (error) {
-      console.error('Failed to parse message from peer:', error);
+      console.error("Failed to parse data from peer:", error);
     }
-  };
+  });
+
+  conn.on("close", () => {
+    console.log("Data connection closed");
+    dataConnection = null;
+    useP2PStore.getState().setConnectionStatus("disconnected");
+  });
+
+  conn.on("error", (error: Error) => {
+    console.error("Data connection error:", error);
+    useP2PStore.getState().setConnectionStatus("disconnected");
+  });
 };
 
 /**
- * Creates an offer for WebRTC connection (host side)
+ * Connects to a peer by ID
  */
-export const createOffer = async (
-  connection: RTCPeerConnection,
-  dataChannel: RTCDataChannel
-): Promise<RTCSessionDescriptionInit> => {
-  const offer = await connection.createOffer();
-  await connection.setLocalDescription(offer);
-  return offer;
+export const connectToPeer = async (peerId: string): Promise<void> => {
+  if (!peerInstance || peerInstance.destroyed) {
+    await initializePeer();
+  }
+
+  if (!peerInstance) {
+    throw new Error("Failed to initialize PeerJS");
+  }
+
+  try {
+    const conn = peerInstance.connect(peerId, {
+      reliable: true,
+    });
+
+    handleDataConnection(conn);
+  } catch (error) {
+    console.error("Failed to connect to peer:", error);
+    throw error;
+  }
 };
 
 /**
- * Creates an answer for WebRTC connection (client side)
+ * Gets the current peer ID
  */
-export const createAnswer = async (
-  connection: RTCPeerConnection,
-  offer: RTCSessionDescriptionInit
-): Promise<RTCSessionDescriptionInit> => {
-  await connection.setRemoteDescription(offer);
-  const answer = await connection.createAnswer();
-  await connection.setLocalDescription(answer);
-  return answer;
+export const getPeerId = (): string | null => {
+  return peerInstance?.id || null;
 };
 
 /**
- * Sets remote description and completes connection
+ * Disconnects and cleans up
  */
-export const setRemoteDescription = async (
-  connection: RTCPeerConnection,
-  description: RTCSessionDescriptionInit
-): Promise<void> => {
-  await connection.setRemoteDescription(description);
+export const disconnect = (): void => {
+  if (dataConnection) {
+    dataConnection.close();
+    dataConnection = null;
+  }
+
+  if (peerInstance && !peerInstance.destroyed) {
+    peerInstance.destroy();
+    peerInstance = null;
+  }
+
+  useP2PStore.getState().clearAllConnections();
 };
 
 /**
- * Sends request configuration to all connected peers
+ * Sends request configuration to connected peer
  */
 export const broadcastRequestConfig = (): void => {
+  if (!dataConnection || dataConnection.open !== true) {
+    return;
+  }
+
   const state = useRequestStore.getState();
-  const p2pState = useP2PStore.getState();
-  
+
   const config: ShareableRequestConfig = {
     method: state.method,
     url: state.url,
@@ -131,148 +171,31 @@ export const broadcastRequestConfig = (): void => {
     authConfig: state.authConfig,
   };
 
-  const message = JSON.stringify(config);
-  
-  p2pState.peerConnections.forEach((peer) => {
-    if (peer.dataChannel && peer.dataChannel.readyState === 'open') {
-      try {
-        peer.dataChannel.send(message);
-      } catch (error) {
-        console.error(`Failed to send message to peer ${peer.id}:`, error);
-      }
-    }
-  });
+  try {
+    dataConnection.send(config);
+    console.log("Sent config to peer");
+  } catch (error) {
+    console.error("Failed to send config to peer:", error);
+  }
 };
 
 /**
- * Initiates a P2P connection as host
+ * Starts as host - initializes peer and returns the peer ID
  */
-export const startHostConnection = async (
-  onPeerConnected?: (peerId: string) => void
-): Promise<string> => {
-  const peerId = generatePeerId();
-  const connection = createPeerConnection();
-  const dataChannel = createDataChannel(connection);
-  
-  useP2PStore.getState().setPeerId(peerId);
+export const startHostConnection = async (): Promise<string> => {
   useP2PStore.getState().setIsHost(true);
-  useP2PStore.getState().setConnectionStatus('connecting');
-  
-  // Handle ICE candidates
-  connection.onicecandidate = (event) => {
-    if (event.candidate) {
-      // In a real implementation, you'd send this to the peer via signaling
-      // For now, we'll use a simpler approach with offer/answer exchange
-    }
-  };
-  
-  // Handle incoming data channel (for when peer connects)
-  connection.ondatachannel = (event) => {
-    const channel = event.channel;
-    const newPeerId = generatePeerId(); // In real scenario, get from signaling
-    setupDataChannel(channel, newPeerId, handleIncomingConfig);
-    
-    const peerConnection: PeerConnection = {
-      id: newPeerId,
-      connection,
-      dataChannel: channel,
-      isConnected: false,
-      isConnecting: true,
-    };
-    
-    useP2PStore.getState().addPeerConnection(newPeerId, peerConnection);
-    if (onPeerConnected) {
-      onPeerConnected(newPeerId);
-    }
-  };
-  
-  // Create offer
-  const offer = await createOffer(connection, dataChannel);
-  setupDataChannel(dataChannel, peerId, handleIncomingConfig);
-  
-  const peerConnection: PeerConnection = {
-    id: peerId,
-    connection,
-    dataChannel,
-    isConnected: false,
-    isConnecting: true,
-  };
-  
-  useP2PStore.getState().addPeerConnection(peerId, peerConnection);
-  
-  // Return offer as base64 for sharing
-  return btoa(JSON.stringify(offer));
+  useP2PStore.getState().setConnectionStatus("connecting");
+
+  const peer = await initializePeer();
+  return peer.id;
 };
 
 /**
  * Connects to a host peer
  */
-export const connectToHost = async (
-  offerBase64: string,
-  onConnected?: () => void
-): Promise<string> => {
-  try {
-    const offer = JSON.parse(atob(offerBase64)) as RTCSessionDescriptionInit;
-    const connection = createPeerConnection();
-    const peerId = generatePeerId();
-    
-    useP2PStore.getState().setPeerId(peerId);
-    useP2PStore.getState().setIsHost(false);
-    useP2PStore.getState().setConnectionStatus('connecting');
-    
-    // Handle incoming data channel
-    connection.ondatachannel = (event) => {
-      const channel = event.channel;
-      setupDataChannel(channel, 'host', handleIncomingConfig);
-      
-      const peerConnection: PeerConnection = {
-        id: 'host',
-        connection,
-        dataChannel: channel,
-        isConnected: false,
-        isConnecting: true,
-      };
-      
-      useP2PStore.getState().addPeerConnection('host', peerConnection);
-      if (onConnected) {
-        onConnected();
-      }
-    };
-    
-    // Create answer
-    const answer = await createAnswer(connection, offer);
-    
-    // Return answer as base64
-    return btoa(JSON.stringify(answer));
-  } catch (error) {
-    console.error('Failed to connect to host:', error);
-    throw error;
-  }
-};
+export const connectToHost = async (hostPeerId: string): Promise<void> => {
+  useP2PStore.getState().setIsHost(false);
+  useP2PStore.getState().setConnectionStatus("connecting");
 
-/**
- * Handles incoming request configuration from peer
- */
-const handleIncomingConfig = (config: ShareableRequestConfig): void => {
-  const { applySharedConfig } = require('./sharing');
-  applySharedConfig(config);
+  await connectToPeer(hostPeerId);
 };
-
-/**
- * Completes connection setup with answer (host side)
- */
-export const completeConnection = async (answerBase64: string): Promise<void> => {
-  try {
-    const answer = JSON.parse(atob(answerBase64)) as RTCSessionDescriptionInit;
-    const state = useP2PStore.getState();
-    const connections = Array.from(state.peerConnections.values());
-    
-    if (connections.length > 0) {
-      await setRemoteDescription(connections[0].connection, answer);
-    }
-  } catch (error) {
-    console.error('Failed to complete connection:', error);
-    throw error;
-  }
-};
-
