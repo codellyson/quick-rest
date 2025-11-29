@@ -3,7 +3,7 @@ import { create } from 'zustand';
 interface P2PState {
   peerId: string | null;
   isHost: boolean;
-  connectionStatus: 'disconnected' | 'connecting' | 'connected';
+  connectionStatus: 'disconnected' | 'ready' | 'connecting' | 'connected';
   
   setPeerId: (id: string | null) => void;
   setIsHost: (isHost: boolean) => void;

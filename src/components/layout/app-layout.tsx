@@ -9,6 +9,7 @@ import { ToastContainer } from "../ui/toast";
 import { loadConfigFromUrl, applySharedConfig } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
 import { useP2PSync } from "../../hooks/use-p2p-sync";
+import { connectToHost } from "../../utils/p2p";
 
 export const AppLayout = () => {
   const { theme } = useAppStore();
@@ -32,11 +33,30 @@ export const AppLayout = () => {
   }, []);
 
   useEffect(() => {
-    // Load shared request configuration from URL hash
-    const sharedConfig = loadConfigFromUrl();
-    if (sharedConfig) {
-      applySharedConfig(sharedConfig);
+    // Load shared request configuration and peer ID from URL hash
+    const sharedData = loadConfigFromUrl();
+    if (sharedData) {
+      const { config, peerId } = sharedData;
+      
+      // Apply the shared configuration
+      applySharedConfig(config);
       showToast("success", "Shared request configuration loaded!");
+      
+      // Auto-connect to peer if peer ID is provided
+      if (peerId) {
+        // Small delay to ensure UI is ready
+        setTimeout(() => {
+          showToast("info", "Connecting to peer for real-time sync...");
+          connectToHost(peerId)
+            .then(() => {
+              showToast("success", "Connected! Real-time sync enabled.");
+            })
+            .catch((error) => {
+              console.error("Failed to connect to peer:", error);
+              showToast("warning", "Config loaded, but connection failed. You can still use the request.");
+            });
+        }, 500);
+      }
       
       // Clean up the URL hash after loading
       if (window.history.replaceState) {
@@ -47,7 +67,7 @@ export const AppLayout = () => {
         );
       }
     }
-  }, []);
+  }, [showToast]);
 
   const handleResize = (width: number) => {
     setLeftPanelWidth(width);

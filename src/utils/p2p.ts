@@ -49,6 +49,8 @@ export const initializePeer = (peerId?: string): Promise<Peer> => {
 
     peer.on("connection", (conn: DataConnection) => {
       console.log("Incoming connection from:", conn.peer);
+      // Host receives a connection - now we're connecting
+      useP2PStore.getState().setConnectionStatus("connecting");
       handleDataConnection(conn);
     });
 
@@ -72,13 +74,39 @@ export const initializePeer = (peerId?: string): Promise<Peer> => {
  */
 const handleDataConnection = (conn: DataConnection): void => {
   dataConnection = conn;
-
+ 
   useP2PStore.getState().setConnectionStatus("connecting");
+  
+  // Set connection timeout
+  const timeout = setTimeout(() => {
+    if (conn.open !== true) {
+      console.warn("Connection timeout");
+      conn.close();
+      useP2PStore.getState().setConnectionStatus("disconnected");
+    }
+  }, 30000);
 
   conn.on("open", () => {
-    console.log("Data connection opened");
+    console.log("✅ Data connection opened with peer:", conn.peer);
+    console.log("Connection state:", {
+      open: conn.open,
+      peer: conn.peer,
+      connectionState: conn.peerConnection?.connectionState
+    });
+    clearTimeout(timeout);
     useP2PStore.getState().setConnectionStatus("connected");
   });
+  
+  // Log connection state changes
+  if (conn.peerConnection) {
+    conn.peerConnection.onconnectionstatechange = () => {
+      console.log("Peer connection state changed:", conn.peerConnection?.connectionState);
+      if (conn.peerConnection?.connectionState === 'connected' && !conn.open) {
+        // Connection established but data channel not open yet
+        console.log("Waiting for data channel to open...");
+      }
+    };
+  }
 
   conn.on("data", (data: unknown) => {
     try {
@@ -115,13 +143,38 @@ export const connectToPeer = async (peerId: string): Promise<void> => {
   }
 
   try {
+    console.log("🔌 Attempting to connect to peer:", peerId);
     const conn = peerInstance.connect(peerId, {
       reliable: true,
     });
 
+    console.log("Connection object created:", {
+      peer: conn.peer,
+      open: conn.open
+    });
+
     handleDataConnection(conn);
+    
+    // Set timeout for connection (30 seconds)
+    const connectionTimeout = setTimeout(() => {
+      if (dataConnection && dataConnection.open !== true) {
+        console.warn("⏱️ Connection timeout after 30s - closing connection");
+        console.log("Connection state:", {
+          open: dataConnection.open,
+          peer: dataConnection.peer
+        });
+        conn.close();
+        useP2PStore.getState().setConnectionStatus("disconnected");
+      }
+    }, 30000);
+    
+    // Clear timeout if connection opens
+    conn.on("open", () => {
+      clearTimeout(connectionTimeout);
+    });
   } catch (error) {
-    console.error("Failed to connect to peer:", error);
+    console.error("❌ Failed to connect to peer:", error);
+    useP2PStore.getState().setConnectionStatus("disconnected");
     throw error;
   }
 };
@@ -135,19 +188,24 @@ export const getPeerId = (): string | null => {
 
 /**
  * Disconnects and cleans up
+ * @param keepPeerInstance - If true, keeps the peer instance but closes data connection
  */
-export const disconnect = (): void => {
+export const disconnect = (keepPeerInstance: boolean = false): void => {
   if (dataConnection) {
     dataConnection.close();
     dataConnection = null;
   }
 
-  if (peerInstance && !peerInstance.destroyed) {
-    peerInstance.destroy();
-    peerInstance = null;
+  if (!keepPeerInstance) {
+    if (peerInstance && !peerInstance.destroyed) {
+      peerInstance.destroy();
+      peerInstance = null;
+    }
+    useP2PStore.getState().clearAllConnections();
+  } else {
+    // Just disconnect the data connection but keep peer instance
+    useP2PStore.getState().setConnectionStatus("disconnected");
   }
-
-  useP2PStore.getState().clearAllConnections();
 };
 
 /**
@@ -184,9 +242,10 @@ export const broadcastRequestConfig = (): void => {
  */
 export const startHostConnection = async (): Promise<string> => {
   useP2PStore.getState().setIsHost(true);
-  useP2PStore.getState().setConnectionStatus("connecting");
-
+  useP2PStore.getState().setConnectionStatus("ready"); // Host is ready, waiting for connections
+ 
   const peer = await initializePeer();
+  console.log("Host peer initialized with ID:", peer.id);
   return peer.id;
 };
 

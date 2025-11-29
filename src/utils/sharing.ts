@@ -21,8 +21,9 @@ export interface ShareableRequestConfig {
 
 /**
  * Serializes the current request configuration to a shareable URL
+ * If peerId is provided, includes it for auto-join P2P connection
  */
-export const generateShareableLink = (): string => {
+export const generateShareableLink = (peerId?: string): string => {
   const state = useRequestStore.getState();
   
   const config: ShareableRequestConfig = {
@@ -42,31 +43,43 @@ export const generateShareableLink = (): string => {
   // Always point to /app route for sharing
   const baseUrl = window.location.origin + '/app';
   
+  // Include peer ID if provided for auto-join
+  if (peerId) {
+    return `${baseUrl}#share=${encoded}&peer=${peerId}`;
+  }
+  
   // Use hash to avoid URL length limits
   return `${baseUrl}#share=${encoded}`;
 };
 
 /**
- * Loads request configuration from URL hash
+ * Loads request configuration and peer ID from URL hash
  */
-export const loadConfigFromUrl = (): ShareableRequestConfig | null => {
+export const loadConfigFromUrl = (): { config: ShareableRequestConfig; peerId?: string } | null => {
   if (typeof window === 'undefined') return null;
   
   const hash = window.location.hash;
-  const match = hash.match(/^#share=(.+)$/);
+  // Match both share=config and optional peer=peerId
+  // Format: #share=base64config&peer=peerId or #share=base64config
+  const shareMatch = hash.match(/^#share=([^&]+)/);
   
-  if (!match) return null;
+  if (!shareMatch) return null;
   
   try {
-    const decoded = atob(match[1]);
+    const decoded = atob(shareMatch[1]);
     const config = JSON.parse(decoded) as ShareableRequestConfig;
-    return config;
+    
+    // Extract peer ID if present
+    const peerMatch = hash.match(/&peer=([^&]+)/);
+    const peerId = peerMatch ? peerMatch[1] : undefined;
+    
+    return { config, peerId };
   } catch (error) {
     console.error('Failed to decode shared request config:', error);
     return null;
   }
 };
-
+    
 /**
  * Applies a shared request configuration to the store
  */

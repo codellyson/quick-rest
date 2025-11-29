@@ -1,4 +1,4 @@
-import { Send, Save, Edit, AlertCircle, Share2, Check, Users } from "lucide-react";
+import { Send, Save, Edit, AlertCircle, Share2, Check, Users, Loader2 } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";
 import { useResponseStore } from "../../stores/use-response-store";
@@ -14,6 +14,7 @@ import { generateShareableLink } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
 import { useP2PStore } from "../../stores/use-p2p-store";
 import { P2PConnectionModal } from "../p2p/p2p-connection-modal";
+import { ConnectionIndicator } from "../p2p/connection-indicator";
 
 export const TopBar = () => {
   const { send } = useRequest();
@@ -49,6 +50,8 @@ export const TopBar = () => {
   );
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [showP2PModal, setShowP2PModal] = useState(false);
+  const [shareWithP2P, setShareWithP2P] = useState(true);
+  const [isCreatingShare, setIsCreatingShare] = useState(false);
   const { connectionStatus } = useP2PStore();
 
   useEffect(() => {
@@ -148,13 +151,46 @@ export const TopBar = () => {
 
   const handleShare = async () => {
     try {
-      const shareLink = generateShareableLink();
-      await navigator.clipboard.writeText(shareLink);
-      setShareLinkCopied(true);
-      showToast("success", "Share link copied to clipboard!");
-      setTimeout(() => setShareLinkCopied(false), 2000);
+      setIsCreatingShare(true);
+      let shareLink: string;
+      
+      if (shareWithP2P) {
+        try {
+          // Import P2P functions dynamically to avoid circular dependencies
+          const { startHostConnection } = await import("../../utils/p2p");
+          
+          // Create host connection first
+          showToast("info", "Creating P2P connection...");
+          const peerId = await startHostConnection();
+          
+          // Generate shareable link with peer ID
+          shareLink = generateShareableLink(peerId);
+          await navigator.clipboard.writeText(shareLink);
+          setShareLinkCopied(true);
+          showToast("success", "Share link with real-time sync copied! Anyone opening it will auto-join.");
+          setTimeout(() => setShareLinkCopied(false), 2000);
+        } catch (p2pError) {
+          console.error("Failed to create P2P connection:", p2pError);
+          // Fallback to regular share without P2P
+          shareLink = generateShareableLink();
+          await navigator.clipboard.writeText(shareLink);
+          setShareLinkCopied(true);
+          showToast("warning", "Share link copied (P2P failed, using regular share)");
+          setTimeout(() => setShareLinkCopied(false), 2000);
+        }
+      } else {
+        // Regular share without P2P
+        shareLink = generateShareableLink();
+        await navigator.clipboard.writeText(shareLink);
+        setShareLinkCopied(true);
+        showToast("success", "Share link copied to clipboard!");
+        setTimeout(() => setShareLinkCopied(false), 2000);
+      }
     } catch (error) {
+      console.error("Failed to create share link:", error);
       showToast("error", "Failed to copy share link");
+    } finally {
+      setIsCreatingShare(false);
     }
   };
 
@@ -234,35 +270,65 @@ export const TopBar = () => {
               Save As
             </Button>
           )}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              disabled={isCreatingShare}
+              title="Share this request configuration"
+              className="relative"
+            >
+              {isCreatingShare ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">Sharing...</span>
+                </>
+              ) : shareLinkCopied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="hidden sm:inline">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Share</span>
+                </>
+              )}
+            </Button>
+            
+            {/* P2P Toggle for Share */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
+              <input
+                type="checkbox"
+                id="p2p-toggle"
+                checked={shareWithP2P}
+                onChange={(e) => setShareWithP2P(e.target.checked)}
+                className="w-3 h-3 rounded text-zinc-900 dark:text-zinc-100 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                title="Include real-time sync in share link"
+              />
+              <label
+                htmlFor="p2p-toggle"
+                className="text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer"
+                title="Include real-time sync in share link"
+              >
+                Sync
+              </label>
+            </div>
+          </div>
+          
+          {/* Compact Connection Indicator */}
+          <ConnectionIndicator />
+          
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleShare}
-            title="Share this request configuration"
-          >
-            {shareLinkCopied ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4" />
-                Share
-              </>
-            )}
-          </Button>
-          <Button
-            variant={connectionStatus === 'connected' ? 'primary' : 'ghost'}
-            size="sm"
             onClick={() => setShowP2PModal(true)}
-            title="Peer-to-peer real-time sync"
-            className={cn(
-              connectionStatus === 'connected' && 'animate-pulse'
-            )}
+            title="Manage P2P connection"
+            className="hidden sm:flex"
           >
             <Users className="w-4 h-4" />
-            {connectionStatus === 'connected' ? 'P2P Connected' : 'P2P'}
+            <span className="hidden md:inline">P2P</span>
           </Button>
         </div>
       </div>
