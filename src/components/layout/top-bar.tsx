@@ -1,4 +1,4 @@
-import { Send, Save, Edit, AlertCircle } from "lucide-react";
+import { Send, Save, Edit, AlertCircle, Share2, Check } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";
 import { useResponseStore } from "../../stores/use-response-store";
@@ -10,10 +10,13 @@ import { useState, useMemo, useEffect } from "react";
 import { Modal } from "../ui/modal";
 import { Input } from "../ui/input";
 import { cn } from "../../utils/cn";
+import { generateShareableLink } from "../../utils/sharing";
+import { useToastStore } from "../../stores/use-toast-store";
 
 export const TopBar = () => {
   const { send } = useRequest();
   const { loading } = useResponseStore();
+  const { showToast } = useToastStore();
   const {
     method,
     url,
@@ -42,6 +45,7 @@ export const TopBar = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(
     undefined
   );
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
 
   useEffect(() => {
     const handleOpenSaveModal = (e: Event) => {
@@ -138,6 +142,18 @@ export const TopBar = () => {
     setPendingFolderId(null);
   };
 
+  const handleShare = async () => {
+    try {
+      const shareLink = generateShareableLink();
+      await navigator.clipboard.writeText(shareLink);
+      setShareLinkCopied(true);
+      showToast("success", "Share link copied to clipboard!");
+      setTimeout(() => setShareLinkCopied(false), 2000);
+    } catch (error) {
+      showToast("error", "Failed to copy share link");
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
@@ -214,6 +230,24 @@ export const TopBar = () => {
               Save As
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            title="Share this request configuration"
+          >
+            {shareLinkCopied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                Share
+              </>
+            )}
+          </Button>
         </div>
       </div>
       <Modal

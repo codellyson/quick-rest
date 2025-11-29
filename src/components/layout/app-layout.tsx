@@ -5,12 +5,13 @@ import { TopBar } from "./top-bar";
 import { RequestTabs } from "../request/request-tabs";
 import { ResponsePanel } from "../response/response-panel";
 import { ToastContainer } from "../ui/toast";
+ import { ResizableDivider } from "../ui/resizable-divider";
+import { loadConfigFromUrl, applySharedConfig } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
-import { ResizableDivider } from "../ui/resizable-divider";
 
 export const AppLayout = () => {
   const { theme } = useAppStore();
-  const { toasts, removeToast } = useToastStore();
+  const { toasts, removeToast, showToast } = useToastStore();
   const [leftPanelWidth, setLeftPanelWidth] = useState<number | null>(null);
 
   useEffect(() => {
@@ -23,6 +24,24 @@ export const AppLayout = () => {
     const savedWidth = localStorage.getItem("panel-width");
     if (savedWidth) {
       setLeftPanelWidth(parseInt(savedWidth, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load shared request configuration from URL hash
+    const sharedConfig = loadConfigFromUrl();
+    if (sharedConfig) {
+      applySharedConfig(sharedConfig);
+      showToast("success", "Shared request configuration loaded!");
+      
+      // Clean up the URL hash after loading
+      if (window.history.replaceState) {
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        );
+      }
     }
   }, []);
 
