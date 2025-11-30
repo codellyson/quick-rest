@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { Copy, Check, Users, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/modal';

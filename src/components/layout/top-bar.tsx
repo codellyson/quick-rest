@@ -1,3 +1,5 @@
+'use client';
+
 import { Send, Save, Edit, AlertCircle, Share2, Check, Loader2 } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";

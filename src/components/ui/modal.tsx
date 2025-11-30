@@ -1,3 +1,5 @@
+'use client';
+
 import { ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../utils/cn';

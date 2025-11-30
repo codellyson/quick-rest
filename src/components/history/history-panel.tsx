@@ -1,3 +1,5 @@
+'use client';
+
 import { useHistoryStore } from '../../stores/use-history-store';
 import { useRequestStore } from '../../stores/use-request-store';
 import { HistoryItem as HistoryItemComponent } from './history-item';

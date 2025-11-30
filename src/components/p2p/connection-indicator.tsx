@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { WifiOff, Users, Copy, Check, Loader2 } from 'lucide-react';
 import { useP2PStore } from '../../stores/use-p2p-store';
