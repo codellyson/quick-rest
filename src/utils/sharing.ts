@@ -50,8 +50,7 @@ export const generateShareableLink = (peerId?: string): string => {
     },
   };
 
-  // Encode the config as base64 JSON
-  const encoded = btoa(JSON.stringify(config));
+  const encoded = encodeURIComponent(JSON.stringify(config));
   
   // Always point to /app route for sharing
   const baseUrl = window.location.origin + '/app';
@@ -72,14 +71,12 @@ export const loadConfigFromUrl = (): { config: ShareableRequestConfig; peerId?: 
   if (typeof window === 'undefined') return null;
   
   const hash = window.location.hash;
-  // Match both share=config and optional peer=peerId
-  // Format: #share=base64config&peer=peerId or #share=base64config
   const shareMatch = hash.match(/^#share=([^&]+)/);
   
   if (!shareMatch) return null;
   
   try {
-    const decoded = atob(shareMatch[1]);
+    const decoded = decodeURIComponent(shareMatch[1]);
     const config = JSON.parse(decoded) as ShareableRequestConfig;
     
     // Extract peer ID if present

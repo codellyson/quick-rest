@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import Head from "next/head";
 
 interface SEOHeadProps {
   title?: string;
@@ -17,12 +17,15 @@ export const SEOHead = ({
   ogType = "website",
   canonicalUrl,
 }: SEOHeadProps) => {
-  const fullTitle = title.includes("QuickRest") ? title : `${title} | QuickRest`;
+  const fullTitle = title.includes("QuickRest")
+    ? title
+    : `${title} | QuickRest`;
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const canonical = canonicalUrl || (typeof window !== "undefined" ? window.location.href : "");
+  const canonical =
+    canonicalUrl || (typeof window !== "undefined" ? window.location.href : "");
 
   return (
-    <Helmet>
+    <Head>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
@@ -31,19 +34,24 @@ export const SEOHead = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />
-      <meta property="og:image" content={ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`} />
+      <meta
+        property="og:image"
+        content={ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`}
+      />
       <meta property="og:url" content={canonical} />
       <meta property="og:site_name" content="QuickRest" />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`} />
+      <meta
+        name="twitter:image"
+        content={ogImage.startsWith("http") ? ogImage : `${siteUrl}${ogImage}`}
+      />
 
       <meta name="robots" content="index, follow" />
       <meta name="author" content="KreativeKorna Concepts" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    </Helmet>
+    </Head>
   );
 };
-
