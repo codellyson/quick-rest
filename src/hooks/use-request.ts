@@ -3,7 +3,6 @@ import { useRequestStore } from "../stores/use-request-store";
 import { useResponseStore } from "../stores/use-response-store";
 import { useHistoryStore } from "../stores/use-history-store";
 import { useEnvironmentStore } from "../stores/use-environment-store";
-import { useToastStore } from "../stores/use-toast-store";
 import { sendRequest, RequestConfig } from "../utils/http";
 import { replaceDynamicVariables, replaceVariables } from "../utils/variables";
 
@@ -12,12 +11,10 @@ export const useRequest = () => {
   const { setResponse, setLoading, setError } = useResponseStore();
   const { addItem: addHistoryItem } = useHistoryStore();
   const { getVariables } = useEnvironmentStore();
-  const { showToast } = useToastStore();
 
   const send = useCallback(async () => {
     if (!request.url.trim()) {
       setError("URL is required");
-      showToast("error", "URL is required");
       return;
     }
 
@@ -28,6 +25,12 @@ export const useRequest = () => {
       const variables = getVariables();
       let url: string = replaceVariables(request.url, variables);
       url = replaceDynamicVariables(url, request.params);
+      
+      const queryIndex = url.indexOf('?');
+      if (queryIndex !== -1) {
+        url = url.substring(0, queryIndex);
+      }
+      
       console.log("url", url);
 
       const enabledParams = request.params.filter((p) => p.enabled);
@@ -68,7 +71,6 @@ export const useRequest = () => {
           body = request.body;
         } catch {
           setError("Invalid JSON in body");
-          showToast("error", "Invalid JSON in body");
           setLoading(false);
           return;
         }
@@ -96,12 +98,10 @@ export const useRequest = () => {
         url,
         status: response.status,
       });
-      showToast("success", `Request completed with status ${response.status}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Request failed";
       setError(errorMessage);
-      showToast("error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,6 @@ export const useRequest = () => {
     setLoading,
     setError,
     addHistoryItem,
-    showToast,
   ]);
 
   return { send };

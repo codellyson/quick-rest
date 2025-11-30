@@ -162,7 +162,6 @@ export const TopBar = () => {
         showToast("success", "Share link copied!");
         setTimeout(() => setShareLinkCopied(false), 2000);
       } catch (p2pError) {
-        // Silent fallback to regular share if P2P fails
         console.error("P2P connection failed, using regular share:", p2pError);
         const shareLink = generateShareableLink();
         await navigator.clipboard.writeText(shareLink);

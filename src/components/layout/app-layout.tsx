@@ -13,6 +13,7 @@ import { useToastStore } from "../../stores/use-toast-store";
 import { useP2PStore } from "../../stores/use-p2p-store";
 import { useP2PSync } from "../../hooks/use-p2p-sync";
 import { connectToHost } from "../../utils/p2p";
+import { usePWA } from "../../hooks/use-pwa";
 
 export const AppLayout = () => {
   const { theme } = useAppStore();
@@ -20,7 +21,7 @@ export const AppLayout = () => {
   const { uiState, setUIState, connectionStatus, peerColor } = useP2PStore();
   const [leftPanelWidth, setLeftPanelWidth] = useState<number | null>(null);
   
-  // Enable P2P sync
+  usePWA();
   useP2PSync();
   
   // Sync panel width with P2P store
