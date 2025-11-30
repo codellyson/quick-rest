@@ -25,6 +25,12 @@ export const useRequest = () => {
       const variables = getVariables();
       let url: string = replaceVariables(request.url, variables);
       url = replaceDynamicVariables(url, request.params);
+      
+      const queryIndex = url.indexOf('?');
+      if (queryIndex !== -1) {
+        url = url.substring(0, queryIndex);
+      }
+      
       console.log("url", url);
 
       const enabledParams = request.params.filter((p) => p.enabled);

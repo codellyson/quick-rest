@@ -10,7 +10,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 export const URLInput = () => {
   const { url, setUrl, params, setParams } = useRequestStore();
   const { getVariables } = useEnvironmentStore();
-  const { setEditingField } = useP2PStore();
+  const { setEditingField, isFieldEditing } = useP2PStore();
   const variables = getVariables();
   const extractedVars = extractVariables(url);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -20,6 +20,8 @@ export const URLInput = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
   const extractTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateUrlFromParamsRef = useRef(false);
+  const prevParamsRef = useRef(params);
 
   const availableVars = Object.keys(variables).filter((key) =>
     key.toLowerCase().includes(suggestionFilter.toLowerCase())
@@ -89,6 +91,7 @@ export const URLInput = () => {
         const extractedParamsStr = JSON.stringify(extractedParams.map(p => ({ key: p.key, value: p.value })).sort((a, b) => a.key.localeCompare(b.key)));
         
         if (currentParamsStr !== extractedParamsStr) {
+          updateUrlFromParamsRef.current = false;
           setParams(extractedParams);
         }
       }
@@ -189,6 +192,61 @@ export const URLInput = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (updateUrlFromParamsRef.current) {
+      updateUrlFromParamsRef.current = false;
+      prevParamsRef.current = params;
+      return;
+    }
+
+    const paramsChanged = JSON.stringify(prevParamsRef.current.map(p => ({ key: p.key, value: p.value, enabled: p.enabled }))) !== 
+                          JSON.stringify(params.map(p => ({ key: p.key, value: p.value, enabled: p.enabled })));
+
+    if (!paramsChanged) {
+      return;
+    }
+
+    if (isFieldEditing('url')) {
+      prevParamsRef.current = params;
+      return;
+    }
+
+    const queryIndex = url.indexOf('?');
+    const baseUrl = queryIndex !== -1 ? url.substring(0, queryIndex) : url;
+    
+    const enabledParams = params.filter(p => p.enabled && p.key && p.value);
+    
+    if (enabledParams.length === 0) {
+      const currentQueryIndex = url.indexOf('?');
+      if (currentQueryIndex !== -1) {
+        const newUrl = url.substring(0, currentQueryIndex);
+        if (newUrl !== url) {
+          updateUrlFromParamsRef.current = true;
+          setUrl(newUrl);
+        }
+      }
+      prevParamsRef.current = params;
+      return;
+    }
+
+    const urlParams = new URLSearchParams();
+    enabledParams.forEach((param) => {
+      if (param.key && param.value) {
+        urlParams.append(param.key, param.value);
+      }
+    });
+
+    const queryString = urlParams.toString();
+    const newUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+    if (newUrl !== url) {
+      updateUrlFromParamsRef.current = true;
+      setUrl(newUrl);
+    }
+    
+    prevParamsRef.current = params;
+  }, [params, url, setUrl, isFieldEditing]);
 
   return (
     <div className="flex-1 relative">
