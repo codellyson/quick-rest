@@ -1,9 +1,11 @@
 import { useRequestStore } from '../../stores/use-request-store';
+import { useP2PStore } from '../../stores/use-p2p-store';
 import { Input } from '../ui/input';
 import { cn } from '../../utils/cn';
 
 export const AuthConfig = () => {
   const { authType, authConfig, setAuthType, setAuthConfig } = useRequestStore();
+  const { setEditingField } = useP2PStore();
 
   return (
     <div className="space-y-3">
@@ -29,6 +31,8 @@ export const AuthConfig = () => {
           type="password"
           value={authConfig.bearerToken || ''}
           onChange={(e) => setAuthConfig({ bearerToken: e.target.value })}
+          onFocus={() => setEditingField('authConfig', true)}
+          onBlur={() => setEditingField('authConfig', false)}
           placeholder="Enter bearer token"
         />
       )}
@@ -38,6 +42,8 @@ export const AuthConfig = () => {
             label="Username"
             value={authConfig.username || ''}
             onChange={(e) => setAuthConfig({ username: e.target.value })}
+            onFocus={() => setEditingField('authConfig', true)}
+            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter username"
           />
           <Input
@@ -45,6 +51,8 @@ export const AuthConfig = () => {
             type="password"
             value={authConfig.password || ''}
             onChange={(e) => setAuthConfig({ password: e.target.value })}
+            onFocus={() => setEditingField('authConfig', true)}
+            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter password"
           />
         </div>
@@ -56,12 +64,16 @@ export const AuthConfig = () => {
             type="password"
             value={authConfig.apiKey || ''}
             onChange={(e) => setAuthConfig({ apiKey: e.target.value })}
+            onFocus={() => setEditingField('authConfig', true)}
+            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter API key"
           />
           <Input
             label="Header Name"
             value={authConfig.apiKeyHeader || 'X-API-Key'}
             onChange={(e) => setAuthConfig({ apiKeyHeader: e.target.value })}
+            onFocus={() => setEditingField('authConfig', true)}
+            onBlur={() => setEditingField('authConfig', false)}
             placeholder="X-API-Key"
           />
         </div>

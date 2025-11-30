@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { cn } from "../../utils/cn";
+import { useP2PStore } from "../../stores/use-p2p-store";
 import { ParamsEditor } from "./params-editor";
 import { HeadersEditor } from "./headers-editor";
 import { BodyEditor } from "./body-editor";
@@ -12,7 +13,12 @@ interface RequestTabsProps {
 }
 
 export const RequestTabs = ({ className }: RequestTabsProps) => {
-  const [activeTab, setActiveTab] = useState<Tab>("params");
+  const { uiState, setUIState } = useP2PStore();
+  const activeTab = uiState.activeTab || "params";
+  
+  const setActiveTab = (tab: Tab) => {
+    setUIState({ activeTab: tab });
+  };
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "params", label: "Params" },

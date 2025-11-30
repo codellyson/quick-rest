@@ -4,6 +4,8 @@ import { cn } from "../../utils/cn";
 interface CodeEditorProps {
   value: string;
   onChange?: (value: string | undefined) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   language?: string;
   readOnly?: boolean;
   height?: string;
@@ -13,6 +15,8 @@ interface CodeEditorProps {
 export const CodeEditor = ({
   value,
   onChange,
+  onFocus,
+  onBlur,
   language = "json",
   readOnly = false,
   height = "400px",
@@ -33,6 +37,14 @@ export const CodeEditor = ({
         language={language}
         value={value}
         onChange={onChange}
+        onMount={(editor) => {
+          if (onFocus) {
+            editor.onDidFocusEditorWidget(() => onFocus());
+          }
+          if (onBlur) {
+            editor.onDidBlurEditorWidget(() => onBlur());
+          }
+        }}
         theme="vs-dark"
         options={{
           readOnly,

@@ -13,6 +13,8 @@ export interface KeyValuePair {
 interface KeyValueEditorProps {
   items: KeyValuePair[];
   onChange: (items: KeyValuePair[]) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   keyPlaceholder?: string;
   valuePlaceholder?: string;
   className?: string;
@@ -21,6 +23,8 @@ interface KeyValueEditorProps {
 export const KeyValueEditor = ({
   items,
   onChange,
+  onFocus,
+  onBlur,
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
   className,
@@ -63,12 +67,16 @@ export const KeyValueEditor = ({
           <Input
             value={item.key}
             onChange={(e) => updateItem(item.id, { key: e.target.value })}
+            onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={keyPlaceholder}
             className="text-sm"
           />
           <Input
             value={item.value}
             onChange={(e) => updateItem(item.id, { value: e.target.value })}
+            onFocus={onFocus}
+            onBlur={onBlur}
             placeholder={valuePlaceholder}
             className="text-sm"
           />

@@ -33,11 +33,13 @@ export const ConnectionIndicator = () => {
     }
   }, [connectionStatus]);
 
-  if (connectionStatus === 'disconnected' && !currentPeerId) {
+  // Only show indicator when actively connecting or if there's an error
+  // Hide when disconnected or when connected (working silently)
+  if (connectionStatus === 'disconnected' || connectionStatus === 'connected') {
     return null;
   }
-
-  // Show indicator if we have a peer ID or are connected/connecting/ready
+  
+  // Only show when connecting or ready (waiting)
   if (!currentPeerId && connectionStatus === 'disconnected') {
     return null;
   }
@@ -80,34 +82,42 @@ export const ConnectionIndicator = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <button
         onClick={() => setShowDetails(!showDetails)}
         className={cn(
-          'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-          'border',
+          'flex items-center gap-1.5 px-2 py-1 rounded transition-all',
+          'border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700',
           connectionStatus === 'connected'
-            ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-950/40'
+            ? 'hover:bg-green-50 dark:hover:bg-green-950/20'
             : connectionStatus === 'connecting'
-            ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/40'
+            ? 'hover:bg-blue-50 dark:hover:bg-blue-950/20'
             : connectionStatus === 'ready'
-            ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40'
-            : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400',
-          'shadow-sm hover:shadow'
+            ? 'hover:bg-amber-50 dark:hover:bg-amber-950/20'
+            : 'hover:bg-zinc-50 dark:hover:bg-zinc-800'
         )}
+        title={
+          connectionStatus === 'connected' 
+            ? 'Live sync active' 
+            : connectionStatus === 'connecting' 
+            ? 'Connecting...' 
+            : connectionStatus === 'ready'
+            ? 'Waiting for connection'
+            : 'Offline'
+        }
       >
         {getStatusDot()}
-        <span className="font-semibold">
+        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
           {connectionStatus === 'connected' 
             ? 'Live' 
             : connectionStatus === 'connecting' 
-            ? 'Connecting...' 
+            ? 'Connecting' 
             : connectionStatus === 'ready'
             ? 'Ready'
             : 'Offline'}
         </span>
         {isHost && (
-          <span className="px-1.5 py-0.5 rounded text-[10px] bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+          <span className="px-1 py-0.5 rounded text-[9px] bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
             Host
           </span>
         )}

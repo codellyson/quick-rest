@@ -1,4 +1,5 @@
 import { AuthType, BodyType, useRequestStore } from '../stores/use-request-store';
+import { useP2PStore } from '../stores/use-p2p-store';
 import { KeyValuePair } from '../components/ui/key-value-editor';
 import { HttpMethod } from './http';
 
@@ -17,14 +18,20 @@ export interface ShareableRequestConfig {
     apiKey?: string;
     apiKeyHeader?: string;
   };
+  uiState?: {
+    activeTab?: 'params' | 'headers' | 'body' | 'auth';
+    panelWidth?: number | null;
+  };
 }
 
 /**
  * Serializes the current request configuration to a shareable URL
  * If peerId is provided, includes it for auto-join P2P connection
+ * Excludes auth config when authentication is added (to protect sensitive data)
  */
 export const generateShareableLink = (peerId?: string): string => {
   const state = useRequestStore.getState();
+  const { uiState } = useP2PStore.getState();
   
   const config: ShareableRequestConfig = {
     method: state.method,
@@ -34,7 +41,13 @@ export const generateShareableLink = (peerId?: string): string => {
     bodyType: state.bodyType,
     body: state.body,
     authType: state.authType,
-    authConfig: state.authConfig,
+    // Only share auth config if no authentication is set (authType === 'none')
+    // Once auth is added, exclude sensitive credentials from sharing
+    authConfig: state.authType === 'none' ? state.authConfig : {},
+    uiState: {
+      activeTab: uiState.activeTab,
+      panelWidth: uiState.panelWidth,
+    },
   };
 
   // Encode the config as base64 JSON
@@ -82,6 +95,7 @@ export const loadConfigFromUrl = (): { config: ShareableRequestConfig; peerId?: 
     
 /**
  * Applies a shared request configuration to the store
+ * Skips fields that are currently being edited to prevent typing disruption
  */
 export const applySharedConfig = (config: ShareableRequestConfig): void => {
   const {
@@ -94,14 +108,40 @@ export const applySharedConfig = (config: ShareableRequestConfig): void => {
     setAuthType,
     setAuthConfig,
   } = useRequestStore.getState();
+  
+  // Check editing state to prevent disrupting active typing
+  const { isFieldEditing } = useP2PStore.getState();
 
+  // Always update method and types (non-text fields)
   setMethod(config.method as unknown as HttpMethod);
-  setUrl(config.url);
-  setParams(config.params || []);
-  setHeaders(config.headers || []);
   setBodyType(config.bodyType as BodyType);
-  setBody(config.body || '');
   setAuthType(config.authType as AuthType);
-  setAuthConfig(config.authConfig || {});
+  
+  // Only update text fields if not currently being edited
+  if (!isFieldEditing('url')) {
+    setUrl(config.url);
+  }
+  
+  if (!isFieldEditing('body')) {
+    setBody(config.body || '');
+  }
+  
+  if (!isFieldEditing('params')) {
+    setParams(config.params || []);
+  }
+  
+  if (!isFieldEditing('headers')) {
+    setHeaders(config.headers || []);
+  }
+  
+  if (!isFieldEditing('authConfig')) {
+    setAuthConfig(config.authConfig || {});
+  }
+  
+  // Apply UI state if provided
+  if (config.uiState) {
+    const { setUIState } = useP2PStore.getState();
+    setUIState(config.uiState);
+  }
 };
 

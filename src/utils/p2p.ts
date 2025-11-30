@@ -210,6 +210,7 @@ export const disconnect = (keepPeerInstance: boolean = false): void => {
 
 /**
  * Sends request configuration to connected peer
+ * Excludes auth config when authentication is added (to protect sensitive data)
  */
 export const broadcastRequestConfig = (): void => {
   if (!dataConnection || dataConnection.open !== true) {
@@ -217,6 +218,7 @@ export const broadcastRequestConfig = (): void => {
   }
 
   const state = useRequestStore.getState();
+  const { uiState } = useP2PStore.getState();
 
   const config: ShareableRequestConfig = {
     method: state.method,
@@ -226,7 +228,13 @@ export const broadcastRequestConfig = (): void => {
     bodyType: state.bodyType,
     body: state.body,
     authType: state.authType,
-    authConfig: state.authConfig,
+    // Only share auth config if no authentication is set (authType === 'none')
+    // Once auth is added, exclude sensitive credentials from syncing
+    authConfig: state.authType === 'none' ? state.authConfig : {},
+    uiState: {
+      activeTab: uiState.activeTab,
+      panelWidth: uiState.panelWidth,
+    },
   };
 
   try {

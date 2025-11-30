@@ -1,5 +1,6 @@
 import { useRequestStore } from "../../stores/use-request-store";
 import { useEnvironmentStore } from "../../stores/use-environment-store";
+import { useP2PStore } from "../../stores/use-p2p-store";
 import { extractVariables } from "../../utils/variables";
 import { cn } from "../../utils/cn";
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
@@ -7,6 +8,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 export const URLInput = () => {
   const { url, setUrl } = useRequestStore();
   const { getVariables } = useEnvironmentStore();
+  const { setEditingField } = useP2PStore();
   const variables = getVariables();
   const extractedVars = extractVariables(url);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +108,8 @@ export const URLInput = () => {
         value={url}
         onChange={(e) => handleInputChange(e.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={() => setEditingField('url', true)}
+        onBlur={() => setEditingField('url', false)}
         placeholder="https://api.example.com/users"
         className={cn(
           "w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg",

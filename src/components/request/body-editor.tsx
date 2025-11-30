@@ -1,9 +1,11 @@
 import { useRequestStore } from "../../stores/use-request-store";
+import { useP2PStore } from "../../stores/use-p2p-store";
 import { CodeEditor } from "../ui/code-editor";
 import { cn } from "../../utils/cn";
 
 export const BodyEditor = () => {
   const { bodyType, body, setBodyType, setBody } = useRequestStore();
+  const { setEditingField } = useP2PStore();
 
   // useEffect(() => {
   //   setBodyType("json");
@@ -35,6 +37,8 @@ export const BodyEditor = () => {
             <CodeEditor
               value={body}
               onChange={(value) => setBody(value || "")}
+              onFocus={() => setEditingField('body', true)}
+              onBlur={() => setEditingField('body', false)}
               language={bodyType === "json" ? "json" : "text"}
               height="calc(100vh - 200px)"
             />

@@ -1,4 +1,4 @@
-import { Send, Save, Edit, AlertCircle, Share2, Check, Users, Loader2 } from "lucide-react";
+import { Send, Save, Edit, AlertCircle, Share2, Check, Loader2 } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";
 import { useResponseStore } from "../../stores/use-response-store";
@@ -13,7 +13,6 @@ import { cn } from "../../utils/cn";
 import { generateShareableLink } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
 import { useP2PStore } from "../../stores/use-p2p-store";
-import { P2PConnectionModal } from "../p2p/p2p-connection-modal";
 import { ConnectionIndicator } from "../p2p/connection-indicator";
 
 export const TopBar = () => {
@@ -49,8 +48,6 @@ export const TopBar = () => {
     undefined
   );
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
-  const [showP2PModal, setShowP2PModal] = useState(false);
-  const [shareWithP2P, setShareWithP2P] = useState(true);
   const [isCreatingShare, setIsCreatingShare] = useState(false);
   const { connectionStatus } = useP2PStore();
 
@@ -152,38 +149,23 @@ export const TopBar = () => {
   const handleShare = async () => {
     try {
       setIsCreatingShare(true);
-      let shareLink: string;
       
-      if (shareWithP2P) {
-        try {
-          // Import P2P functions dynamically to avoid circular dependencies
-          const { startHostConnection } = await import("../../utils/p2p");
-          
-          // Create host connection first
-          showToast("info", "Creating P2P connection...");
-          const peerId = await startHostConnection();
-          
-          // Generate shareable link with peer ID
-          shareLink = generateShareableLink(peerId);
-          await navigator.clipboard.writeText(shareLink);
-          setShareLinkCopied(true);
-          showToast("success", "Share link with real-time sync copied! Anyone opening it will auto-join.");
-          setTimeout(() => setShareLinkCopied(false), 2000);
-        } catch (p2pError) {
-          console.error("Failed to create P2P connection:", p2pError);
-          // Fallback to regular share without P2P
-          shareLink = generateShareableLink();
-          await navigator.clipboard.writeText(shareLink);
-          setShareLinkCopied(true);
-          showToast("warning", "Share link copied (P2P failed, using regular share)");
-          setTimeout(() => setShareLinkCopied(false), 2000);
-        }
-      } else {
-        // Regular share without P2P
-        shareLink = generateShareableLink();
+      try {
+        // Always enable P2P for seamless real-time sync
+        const { startHostConnection } = await import("../../utils/p2p");
+        const peerId = await startHostConnection();
+        const shareLink = generateShareableLink(peerId);
         await navigator.clipboard.writeText(shareLink);
         setShareLinkCopied(true);
-        showToast("success", "Share link copied to clipboard!");
+        showToast("success", "Share link copied!");
+        setTimeout(() => setShareLinkCopied(false), 2000);
+      } catch (p2pError) {
+        // Silent fallback to regular share if P2P fails
+        console.error("P2P connection failed, using regular share:", p2pError);
+        const shareLink = generateShareableLink();
+        await navigator.clipboard.writeText(shareLink);
+        setShareLinkCopied(true);
+        showToast("success", "Share link copied!");
         setTimeout(() => setShareLinkCopied(false), 2000);
       }
     } catch (error) {
@@ -224,21 +206,23 @@ export const TopBar = () => {
             </span>
           </div>
         )}
-        <div className="flex items-center gap-3 p-4">
+        <div className="flex items-center gap-2 p-3">
           <MethodSelector value={method} onChange={setMethod} />
           <URLInput />
           <Button
             variant="primary"
+            size="sm"
             onClick={send}
             disabled={loading || !url.trim()}
+            title="Send request"
           >
             <Send className="w-4 h-4" />
-            Send
           </Button>
           <Button
             variant={
               hasUnsavedChanges && activeCollection ? "primary" : "secondary"
             }
+            size="sm"
             onClick={() => {
               setRequestName(activeCollection?.name || url);
               setSaveAsNew(false);
@@ -248,11 +232,11 @@ export const TopBar = () => {
             className={cn(
               hasUnsavedChanges && activeCollection && "animate-pulse"
             )}
+            title={activeCollection ? "Update request" : "Save request"}
           >
             <Save className="w-4 h-4" />
-            {activeCollection ? "Update" : "Save"}
             {hasUnsavedChanges && activeCollection && (
-              <span className="ml-1 text-xs">●</span>
+              <span className="ml-0.5 text-xs">●</span>
             )}
           </Button>
           {activeCollection && (
@@ -265,77 +249,32 @@ export const TopBar = () => {
                 setSelectedFolderId(activeCollection.folderId);
                 setShowSaveModal(true);
               }}
-              className="text-xs"
+              title="Save as new request"
             >
-              Save As
+              <span className="text-xs">Save As</span>
             </Button>
           )}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleShare}
-              disabled={isCreatingShare}
-              title="Share this request configuration"
-              className="relative"
-            >
-              {isCreatingShare ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="hidden sm:inline">Sharing...</span>
-                </>
-              ) : shareLinkCopied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span className="hidden sm:inline">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Share</span>
-                </>
-              )}
-            </Button>
-            
-            {/* P2P Toggle for Share */}
-            <div className="flex items-center gap-1 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
-              <input
-                type="checkbox"
-                id="p2p-toggle"
-                checked={shareWithP2P}
-                onChange={(e) => setShareWithP2P(e.target.checked)}
-                className="w-3 h-3 rounded text-zinc-900 dark:text-zinc-100 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                title="Include real-time sync in share link"
-              />
-              <label
-                htmlFor="p2p-toggle"
-                className="text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer"
-                title="Include real-time sync in share link"
-              >
-                Sync
-              </label>
-            </div>
-          </div>
-          
-          {/* Compact Connection Indicator */}
-          <ConnectionIndicator />
-          
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowP2PModal(true)}
-            title="Manage P2P connection"
-            className="hidden sm:flex"
+            onClick={handleShare}
+            disabled={isCreatingShare}
+            title="Share this request configuration"
+            className="relative"
           >
-            <Users className="w-4 h-4" />
-            <span className="hidden md:inline">P2P</span>
+            {isCreatingShare ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : shareLinkCopied ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Share2 className="w-4 h-4" />
+            )}
           </Button>
+          
+          {/* Connection Indicator - only show when there's an error or explicit need */}
+          {connectionStatus === 'connecting' && <ConnectionIndicator />}
         </div>
       </div>
-      <P2PConnectionModal
-        isOpen={showP2PModal}
-        onClose={() => setShowP2PModal(false)}
-      />
       <Modal
         isOpen={showSaveModal}
         onClose={() => {
