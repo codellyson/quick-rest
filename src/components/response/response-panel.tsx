@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { useResponseStore } from '../../stores/use-response-store';
 import { ResponseMeta } from './response-meta';

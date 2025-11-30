@@ -1,3 +1,5 @@
+'use client';
+
 import { HttpResponse } from '../../utils/http';
 import { Copy } from 'lucide-react';
 import { Button } from '../ui/button';

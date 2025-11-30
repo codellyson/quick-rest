@@ -1,3 +1,5 @@
+'use client';
+
 import { useEnvironmentStore } from '../../stores/use-environment-store';
 import { cn } from '../../utils/cn';
 

@@ -1,23 +1,20 @@
-import { useNavigate } from "@tanstack/react-router";
+"use client";
+
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Logo } from "../ui/logo";
 import { Button } from "../ui/button";
 import { ArrowRight, Zap, Folder, Globe } from "lucide-react";
-import { SEOHead } from "../seo/seo-head";
 
 export const LandingPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleGetStarted = () => {
-    navigate({ to: "/app" });
+    router.push("/app");
   };
 
   return (
     <>
-      <SEOHead
-        title="QuickRest - Your elegant API testing companion"
-        description="Test and analyze your APIs with AI-powered insights and a beautiful, intuitive interface. Fast, powerful, and organized API testing tool."
-        canonicalUrl={typeof window !== "undefined" ? window.location.href : ""}
-      />
       <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col items-center justify-center px-4 py-12">
         <div className="max-w-2xl w-full text-center space-y-8">
           <div className="flex flex-col items-center space-y-6">
@@ -48,12 +45,6 @@ export const LandingPage = () => {
               Start Testing
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            <button
-              onClick={handleGetStarted}
-              className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-            >
-              Continue Working
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 mt-12 border-t border-zinc-200 dark:border-zinc-800">
@@ -93,12 +84,12 @@ export const LandingPage = () => {
           </div>
 
           <div className="pt-8 space-y-2">
-            <a
-              href="https://kreativekorna.com/blog/api-testing-with-quickrest"
+            <Link
+              href="/blog"
               className="text-sm text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
             >
               Learn more about API testing
-            </a>
+            </Link>
             <p className="text-xs text-zinc-400 dark:text-zinc-600">
               Created by{" "}
               <a

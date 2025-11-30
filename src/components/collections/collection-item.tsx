@@ -1,3 +1,5 @@
+'use client';
+
 import { Trash2, Copy, Edit2, CircleDot, GripVertical } from "lucide-react";
 import { CollectionItem as CollectionItemType } from "../../stores/use-collections-store";
 import { Button } from "../ui/button";

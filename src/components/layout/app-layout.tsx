@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from "react";
 import { useAppStore } from "../../stores/use-app-store";
 import { Sidebar } from "./sidebar";

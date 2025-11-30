@@ -1,3 +1,5 @@
+'use client';
+
 import { useRequestStore } from '../../stores/use-request-store';
 import { useP2PStore } from '../../stores/use-p2p-store';
 import { KeyValueEditor } from '../ui/key-value-editor';

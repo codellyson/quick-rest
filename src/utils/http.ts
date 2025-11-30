@@ -12,7 +12,7 @@ export interface HttpResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
-  data: any;
+  data: unknown;
   time: number;
   size: number;
 }
@@ -52,7 +52,7 @@ export const sendRequest = async (config: RequestConfig): Promise<HttpResponse> 
       responseHeaders[key] = value;
     });
 
-    let data: any;
+    let data: unknown;
     const contentType = response.headers.get('content-type') || '';
     
     if (contentType.includes('application/json')) {

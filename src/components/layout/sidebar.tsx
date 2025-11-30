@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { Settings, Moon, Sun, History, Folder, Globe } from "lucide-react";
 import { useAppStore } from "../../stores/use-app-store";
 import { CollectionsList } from "../collections/collections-list";
@@ -12,7 +14,7 @@ import { SettingsModal } from "./settings-modal";
 type SidebarSection = "collections" | "history" | "environments";
 
 export const Sidebar = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { theme, toggleTheme } = useAppStore();
   const [activeSection, setActiveSection] =
     useState<SidebarSection>("collections");
@@ -78,7 +80,7 @@ export const Sidebar = () => {
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-900">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => navigate({ to: "/" })}
+            onClick={() => router.push("/")}
             className="hover:opacity-80 transition-opacity cursor-pointer"
             aria-label="Go to home"
           >
