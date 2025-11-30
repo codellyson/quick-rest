@@ -1,4 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react';
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { cn } from '../../utils/cn';
@@ -18,7 +19,103 @@ interface KeyValueEditorProps {
   keyPlaceholder?: string;
   valuePlaceholder?: string;
   className?: string;
+  enableAutocomplete?: boolean;
+  suggestions?: string[];
 }
+
+const COMMON_HTTP_HEADERS = [
+  'Accept',
+  'Accept-Charset',
+  'Accept-Encoding',
+  'Accept-Language',
+  'Authorization',
+  'Cache-Control',
+  'Content-Type',
+  'Content-Length',
+  'Content-Encoding',
+  'Content-Disposition',
+  'Cookie',
+  'Date',
+  'ETag',
+  'Expires',
+  'If-Match',
+  'If-None-Match',
+  'If-Modified-Since',
+  'If-Unmodified-Since',
+  'Last-Modified',
+  'Location',
+  'Origin',
+  'Referer',
+  'User-Agent',
+  'X-Requested-With',
+  'X-API-Key',
+  'X-API-Version',
+  'X-Client-ID',
+  'X-Client-Secret',
+  'X-Correlation-ID',
+  'X-Forwarded-For',
+  'X-Forwarded-Proto',
+  'X-Forwarded-Host',
+  'X-Real-IP',
+  'X-Request-ID',
+  'X-Trace-ID',
+  'X-Idempotency-Key',
+  'X-Rate-Limit-Limit',
+  'X-Rate-Limit-Remaining',
+  'X-Rate-Limit-Reset',
+  'X-ID-Key'
+];
+
+const COMMON_QUERY_PARAMS = [
+  'page',
+  'limit',
+  'offset',
+  'per_page',
+  'size',
+  'sort',
+  'order',
+  'order_by',
+  'filter',
+  'search',
+  'q',
+  'query',
+  'include',
+  'fields',
+  'expand',
+  'select',
+  'exclude',
+  'format',
+  'callback',
+  'embed',
+  'count',
+  'skip',
+  'take',
+  'top',
+  'from',
+  'to',
+  'since',
+  'until',
+  'before',
+  'after',
+  'id',
+  'ids',
+  'status',
+  'type',
+  'category',
+  'tag',
+  'tags',
+  'author',
+  'published',
+  'created_at',
+  'updated_at',
+  'deleted_at',
+  'api_key',
+  'api_token',
+  'access_token',
+  'token',
+  'key',
+  'secret',
+];
 
 export const KeyValueEditor = ({
   items,
@@ -28,7 +125,27 @@ export const KeyValueEditor = ({
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
   className,
+  enableAutocomplete = false,
+  suggestions = [],
 }: KeyValueEditorProps) => {
+  const [activeAutocomplete, setActiveAutocomplete] = useState<string | null>(null);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRefs = useRef<Record<string, HTMLInputElement>>({});
+  const suggestionRefs = useRef<Record<string, HTMLDivElement>>({});
+
+  const isHeaderEditor = keyPlaceholder?.toLowerCase().includes('header') ?? false;
+  const isParamEditor = keyPlaceholder?.toLowerCase().includes('param') ?? false;
+  
+  const allSuggestions = enableAutocomplete 
+    ? [...new Set([
+        ...(isHeaderEditor ? COMMON_HTTP_HEADERS : []),
+        ...(isParamEditor ? COMMON_QUERY_PARAMS : []),
+        ...suggestions, 
+        ...items.map(i => i.key).filter(Boolean)
+      ])]
+    : [];
+
   const updateItem = (id: string, updates: Partial<KeyValuePair>) => {
     onChange(
       items.map((item) => (item.id === id ? { ...item, ...updates } : item))
@@ -49,7 +166,69 @@ export const KeyValueEditor = ({
 
   const removeItem = (id: string) => {
     onChange(items.filter((item) => item.id !== id));
+    if (activeAutocomplete === id) {
+      setActiveAutocomplete(null);
+    }
   };
+
+  const handleKeyInput = (id: string, value: string) => {
+    updateItem(id, { key: value });
+    
+    if (enableAutocomplete && value) {
+      const filtered = allSuggestions.filter(s => 
+        s.toLowerCase().includes(value.toLowerCase()) && 
+        s.toLowerCase() !== value.toLowerCase()
+      );
+      setFilteredSuggestions(filtered.slice(0, 10));
+      setSelectedIndex(0);
+      setActiveAutocomplete(id);
+    } else {
+      setActiveAutocomplete(null);
+    }
+  };
+
+  const handleKeyDown = (id: string, e: KeyboardEvent<HTMLInputElement>) => {
+    if (!enableAutocomplete || activeAutocomplete !== id || filteredSuggestions.length === 0) {
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % filteredSuggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + filteredSuggestions.length) % filteredSuggestions.length);
+    } else if (e.key === 'Enter' && filteredSuggestions[selectedIndex]) {
+      e.preventDefault();
+      updateItem(id, { key: filteredSuggestions[selectedIndex] });
+      setActiveAutocomplete(null);
+      inputRefs.current[id]?.blur();
+    } else if (e.key === 'Escape') {
+      setActiveAutocomplete(null);
+    }
+  };
+
+  const selectSuggestion = (id: string, suggestion: string) => {
+    updateItem(id, { key: suggestion });
+    setActiveAutocomplete(null);
+    inputRefs.current[id]?.focus();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (activeAutocomplete) {
+        const input = inputRefs.current[activeAutocomplete];
+        const suggestion = suggestionRefs.current[activeAutocomplete];
+        if (input && suggestion && 
+            !input.contains(e.target as Node) && 
+            !suggestion.contains(e.target as Node)) {
+          setActiveAutocomplete(null);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeAutocomplete]);
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -62,16 +241,54 @@ export const KeyValueEditor = ({
       {items.map((item) => (
         <div
           key={item.id}
-          className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center"
+          className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center relative"
         >
-          <Input
-            value={item.key}
-            onChange={(e) => updateItem(item.id, { key: e.target.value })}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            placeholder={keyPlaceholder}
-            className="text-sm"
-          />
+          <div className="relative">
+            <Input
+              ref={(el) => {
+                if (el) inputRefs.current[item.id] = el;
+              }}
+              value={item.key}
+              onChange={(e) => handleKeyInput(item.id, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(item.id, e)}
+              onFocus={() => {
+                onFocus?.();
+                if (enableAutocomplete && item.key) {
+                  const filtered = allSuggestions.filter(s => 
+                    s.toLowerCase().includes(item.key.toLowerCase()) && 
+                    s.toLowerCase() !== item.key.toLowerCase()
+                  );
+                  setFilteredSuggestions(filtered.slice(0, 10));
+                  setActiveAutocomplete(item.id);
+                }
+              }}
+              onBlur={onBlur}
+              placeholder={keyPlaceholder}
+              className="text-sm"
+            />
+            {enableAutocomplete && activeAutocomplete === item.id && filteredSuggestions.length > 0 && (
+              <div
+                ref={(el) => {
+                  if (el) suggestionRefs.current[item.id] = el;
+                }}
+                className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg max-h-48 overflow-auto"
+              >
+                {filteredSuggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => selectSuggestion(item.id, suggestion)}
+                    className={cn(
+                      "w-full px-3 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                      index === selectedIndex && "bg-zinc-100 dark:bg-zinc-800"
+                    )}
+                  >
+                    <div className="font-mono text-zinc-900 dark:text-zinc-100">{suggestion}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <Input
             value={item.value}
             onChange={(e) => updateItem(item.id, { value: e.target.value })}

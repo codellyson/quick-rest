@@ -6,7 +6,7 @@ import { cn } from "../../utils/cn";
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 
 export const URLInput = () => {
-  const { url, setUrl } = useRequestStore();
+  const { url, setUrl, params, setParams } = useRequestStore();
   const { getVariables } = useEnvironmentStore();
   const { setEditingField } = useP2PStore();
   const variables = getVariables();
@@ -17,10 +17,83 @@ export const URLInput = () => {
   const [suggestionFilter, setSuggestionFilter] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const extractTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const availableVars = Object.keys(variables).filter((key) =>
     key.toLowerCase().includes(suggestionFilter.toLowerCase())
   );
+
+  const extractParamsFromUrl = (urlValue: string) => {
+    try {
+      const queryIndex = urlValue.indexOf('?');
+      const baseUrl = queryIndex !== -1 ? urlValue.substring(0, queryIndex) : urlValue;
+      
+      // Extract path parameters (e.g., /users/{{id}} or /users/:id)
+      const pathParams: Array<{ key: string; value: string }> = [];
+      const pathParamRegex = /\{\{(\w+)\}\}|:(\w+)/g;
+      let match;
+      
+      while ((match = pathParamRegex.exec(baseUrl)) !== null) {
+        const paramName = match[1] || match[2]; // Support both {{id}} and :id syntax
+        if (paramName && !pathParams.some(p => p.key === paramName)) {
+          pathParams.push({ key: paramName, value: '' });
+        }
+      }
+
+      // Extract query parameters
+      const queryParams: Array<{ key: string; value: string }> = [];
+      if (queryIndex !== -1) {
+        const queryString = urlValue.substring(queryIndex + 1);
+        if (queryString.trim()) {
+          const urlParams = new URLSearchParams(queryString);
+          urlParams.forEach((value, key) => {
+            queryParams.push({ key, value });
+          });
+        }
+      }
+
+      // Combine path and query params
+      const allExtractedParams = [...pathParams, ...queryParams];
+      
+      if (allExtractedParams.length === 0) {
+        // If no params found, check if we should clear existing params
+        if (params.length > 0 && params.some(p => p.key && p.value)) {
+          const hasCommonParamNames = params.some(p => 
+            ['page', 'limit', 'offset', 'sort', 'filter', 'search', 'q'].includes(p.key.toLowerCase())
+          );
+          if (hasCommonParamNames) {
+            setParams([]);
+          }
+        }
+        return;
+      }
+
+      // Convert to KeyValuePair format
+      const extractedParams: typeof params = [];
+      let idCounter = Date.now();
+      
+      allExtractedParams.forEach(({ key, value }) => {
+        extractedParams.push({
+          id: (idCounter++).toString(),
+          key,
+          value,
+          enabled: true,
+        });
+      });
+
+      if (extractedParams.length > 0) {
+        // Only update if params are different to avoid loops
+        const currentParamsStr = JSON.stringify(params.map(p => ({ key: p.key, value: p.value })).sort((a, b) => a.key.localeCompare(b.key)));
+        const extractedParamsStr = JSON.stringify(extractedParams.map(p => ({ key: p.key, value: p.value })).sort((a, b) => a.key.localeCompare(b.key)));
+        
+        if (currentParamsStr !== extractedParamsStr) {
+          setParams(extractedParams);
+        }
+      }
+    } catch (error) {
+      // Silently fail if URL parsing fails
+    }
+  };
 
   const handleInputChange = (value: string) => {
     setUrl(value);
@@ -46,6 +119,15 @@ export const URLInput = () => {
     }
 
     setShowSuggestions(false);
+    
+    // Auto-extract params from URL with debounce to avoid disrupting typing
+    if (extractTimeoutRef.current) {
+      clearTimeout(extractTimeoutRef.current);
+    }
+    
+    extractTimeoutRef.current = setTimeout(() => {
+      extractParamsFromUrl(value);
+    }, 800);
   };
 
   const insertVariable = (varName: string) => {
@@ -98,7 +180,12 @@ export const URLInput = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (extractTimeoutRef.current) {
+        clearTimeout(extractTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (

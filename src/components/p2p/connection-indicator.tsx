@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Wifi, WifiOff, Users, X, Copy, Check, Loader2 } from 'lucide-react';
+import { WifiOff, Users, Copy, Check, Loader2 } from 'lucide-react';
 import { useP2PStore } from '../../stores/use-p2p-store';
-import { disconnect, getPeerId } from '../../utils/p2p';
+import { getPeerId } from '../../utils/p2p';
 import { useToastStore } from '../../stores/use-toast-store';
 import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
@@ -33,22 +33,16 @@ export const ConnectionIndicator = () => {
     }
   }, [connectionStatus]);
 
-  // Only show indicator when actively connecting or if there's an error
+  // Only show indicator when actively connecting or ready
   // Hide when disconnected or when connected (working silently)
   if (connectionStatus === 'disconnected' || connectionStatus === 'connected') {
     return null;
   }
   
   // Only show when connecting or ready (waiting)
-  if (!currentPeerId && connectionStatus === 'disconnected') {
+  if (!currentPeerId) {
     return null;
   }
-
-  const handleDisconnect = () => {
-    disconnect(true);
-    setShowDetails(false);
-    showToast('info', 'Disconnected from peer');
-  };
 
   const handleCopyPeerId = async () => {
     if (currentPeerId) {
@@ -61,13 +55,6 @@ export const ConnectionIndicator = () => {
 
   const getStatusDot = () => {
     switch (connectionStatus) {
-      case 'connected':
-        return (
-          <div className="relative">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <div className="absolute inset-0 w-2 h-2 bg-green-500 rounded-full animate-ping opacity-75" />
-          </div>
-        );
       case 'connecting':
         return <Loader2 className="w-3 h-3 animate-spin text-blue-500" />;
       case 'ready':
@@ -88,18 +75,14 @@ export const ConnectionIndicator = () => {
         className={cn(
           'flex items-center gap-1.5 px-2 py-1 rounded transition-all',
           'border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700',
-          connectionStatus === 'connected'
-            ? 'hover:bg-green-50 dark:hover:bg-green-950/20'
-            : connectionStatus === 'connecting'
+          connectionStatus === 'connecting'
             ? 'hover:bg-blue-50 dark:hover:bg-blue-950/20'
             : connectionStatus === 'ready'
             ? 'hover:bg-amber-50 dark:hover:bg-amber-950/20'
             : 'hover:bg-zinc-50 dark:hover:bg-zinc-800'
         )}
         title={
-          connectionStatus === 'connected' 
-            ? 'Live sync active' 
-            : connectionStatus === 'connecting' 
+          connectionStatus === 'connecting' 
             ? 'Connecting...' 
             : connectionStatus === 'ready'
             ? 'Waiting for connection'
@@ -108,9 +91,7 @@ export const ConnectionIndicator = () => {
       >
         {getStatusDot()}
         <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-          {connectionStatus === 'connected' 
-            ? 'Live' 
-            : connectionStatus === 'connecting' 
+          {connectionStatus === 'connecting' 
             ? 'Connecting' 
             : connectionStatus === 'ready'
             ? 'Ready'
@@ -135,37 +116,22 @@ export const ConnectionIndicator = () => {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {connectionStatus === 'connected' ? (
-                    <Wifi className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  ) : connectionStatus === 'ready' ? (
+                  {connectionStatus === 'ready' ? (
                     <WifiOff className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   ) : (
                     <WifiOff className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   )}
                   <div>
                     <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      {connectionStatus === 'connected' 
-                        ? 'Live Sync Active' 
-                        : connectionStatus === 'ready'
+                      {connectionStatus === 'ready'
                         ? 'Waiting for connection'
                         : 'Connecting...'}
                     </div>
                     <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {isHost ? 'You are the host' : 'Connected as client'}
+                      {isHost ? 'You are the host' : 'Connecting as client'}
                     </div>
                   </div>
                 </div>
-                {connectionStatus === 'connected' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDisconnect}
-                    className="h-7 w-7 p-0"
-                    title="Disconnect"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
 
               {/* Peer ID Section */}
@@ -197,11 +163,7 @@ export const ConnectionIndicator = () => {
               {/* Status Info */}
               <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
                 <Users className="w-3.5 h-3.5" />
-                <span>
-                  {connectionStatus === 'connected'
-                    ? 'Real-time synchronization enabled'
-                    : 'Establishing connection...'}
-                </span>
+                <span>Establishing connection...</span>
               </div>
 
               {/* Connection Status */}

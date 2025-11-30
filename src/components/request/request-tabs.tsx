@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { cn } from "../../utils/cn";
 import { useP2PStore } from "../../stores/use-p2p-store";
 import { ParamsEditor } from "./params-editor";

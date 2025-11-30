@@ -6,6 +6,12 @@ export const ParamsEditor = () => {
   const { params, setParams } = useRequestStore();
   const { setEditingField } = useP2PStore();
 
+  // Get recently used params from existing items
+  const recentParams = params
+    .map(p => p.key)
+    .filter(Boolean)
+    .filter((key, index, self) => self.indexOf(key) === index);
+
   return (
     <KeyValueEditor
       items={params}
@@ -14,6 +20,8 @@ export const ParamsEditor = () => {
       onBlur={() => setEditingField('params', false)}
       keyPlaceholder="Parameter name"
       valuePlaceholder="Value"
+      enableAutocomplete={true}
+      suggestions={recentParams}
     />
   );
 };

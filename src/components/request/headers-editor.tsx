@@ -6,6 +6,12 @@ export const HeadersEditor = () => {
   const { headers, setHeaders } = useRequestStore();
   const { setEditingField } = useP2PStore();
 
+  // Get recently used headers from existing items
+  const recentHeaders = headers
+    .map(h => h.key)
+    .filter(Boolean)
+    .filter((key, index, self) => self.indexOf(key) === index);
+
   return (
     <KeyValueEditor
       items={headers}
@@ -14,6 +20,8 @@ export const HeadersEditor = () => {
       onBlur={() => setEditingField('headers', false)}
       keyPlaceholder="Header name"
       valuePlaceholder="Value"
+      enableAutocomplete={true}
+      suggestions={recentHeaders}
     />
   );
 };
