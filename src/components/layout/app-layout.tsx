@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useAppStore } from "../../stores/use-app-store";
@@ -7,7 +7,7 @@ import { TopBar } from "./top-bar";
 import { RequestTabs } from "../request/request-tabs";
 import { ResponsePanel } from "../response/response-panel";
 import { ToastContainer } from "../ui/toast";
- import { ResizableDivider } from "../ui/resizable-divider";
+import { ResizableDivider } from "../ui/resizable-divider";
 import { loadConfigFromUrl, applySharedConfig } from "../../utils/sharing";
 import { useToastStore } from "../../stores/use-toast-store";
 import { useP2PStore } from "../../stores/use-p2p-store";
@@ -20,10 +20,10 @@ export const AppLayout = () => {
   const { toasts, removeToast, showToast } = useToastStore();
   const { uiState, setUIState, connectionStatus, peerColor } = useP2PStore();
   const [leftPanelWidth, setLeftPanelWidth] = useState<number | null>(null);
-  
+
   usePWA();
   useP2PSync();
-  
+
   // Sync panel width with P2P store
   useEffect(() => {
     if (uiState.panelWidth !== null && uiState.panelWidth !== leftPanelWidth) {
@@ -51,21 +51,24 @@ export const AppLayout = () => {
     const sharedData = loadConfigFromUrl();
     if (sharedData) {
       const { config, peerId } = sharedData;
-      
+
       // Apply the shared configuration silently
       applySharedConfig(config);
-      
+
       // Auto-connect to peer if peer ID is provided (silently in background)
       if (peerId) {
         setTimeout(() => {
           connectToHost(peerId).catch((error) => {
             console.error("Failed to connect to peer:", error);
             // Only show error if connection fails
-            showToast("warning", "Connection failed. You can still use the request.");
+            showToast(
+              "warning",
+              "Connection failed. You can still use the request."
+            );
           });
         }, 500);
       }
-      
+
       // Clean up the URL hash after loading
       if (window.history.replaceState) {
         window.history.replaceState(
@@ -83,17 +86,18 @@ export const AppLayout = () => {
     localStorage.setItem("panel-width", width.toString());
   };
 
-  const isConnected = connectionStatus === 'connected';
-  const outlineStyle = isConnected && peerColor 
-    ? { 
-        outline: `2px solid ${peerColor}`,
-        outlineOffset: '-2px',
-        boxShadow: `0 0 0 1px ${peerColor}20`,
-      } 
-    : {};
+  const isConnected = connectionStatus === "connected";
+  const outlineStyle =
+    isConnected && peerColor
+      ? {
+          outline: `2px solid ${peerColor}`,
+          outlineOffset: "-2px",
+          boxShadow: `0 0 0 1px ${peerColor}20`,
+        }
+      : {};
 
   return (
-    <div 
+    <div
       className="flex h-screen overflow-hidden bg-white dark:bg-zinc-950 transition-all duration-300"
       style={outlineStyle}
     >

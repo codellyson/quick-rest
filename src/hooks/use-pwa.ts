@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export const usePWA = () => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://');
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as unknown as { standalone: boolean }).standalone ===
+        true ||
+      document.referrer.includes("android-app://");
 
     setIsInstalled(isStandalone);
 
@@ -20,37 +22,42 @@ export const usePWA = () => {
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    if ('serviceWorker' in navigator) {
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register("/sw.js")
         .then((registration) => {
-          console.log('Service Worker registered:', registration);
+          console.log("Service Worker registered:", registration);
         })
         .catch((error) => {
-          console.error('Service Worker registration failed:', error);
+          console.error("Service Worker registration failed:", error);
         });
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
     };
   }, []);
 
   const installApp = async () => {
     if (!deferredPrompt) return false;
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
+    (deferredPrompt as unknown as { prompt: () => void }).prompt();
+    const { outcome } = await (
+      deferredPrompt as unknown as { userChoice: { outcome: string } }
+    ).userChoice;
+
+    if (outcome === "accepted") {
       setIsInstalled(true);
       setIsInstallable(false);
     }
-    
+
     setDeferredPrompt(null);
-    return outcome === 'accepted';
+    return outcome === "accepted";
   };
 
   return {
@@ -59,4 +66,3 @@ export const usePWA = () => {
     installApp,
   };
 };
-
