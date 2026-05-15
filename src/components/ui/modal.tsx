@@ -3,7 +3,6 @@
 import { ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { Button } from './button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -35,22 +34,16 @@ export const Modal = ({
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
+    if (isOpen) document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const sizes = {
-    sm: 'max-w-lg',
+    sm: 'max-w-md',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
@@ -59,40 +52,35 @@ export const Modal = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        className="fixed inset-0 bg-zinc-950/20 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
         aria-hidden="true"
       />
       <div
         className={cn(
-          'relative bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xl',
-          'w-full',
+          'relative z-10 bg-bg border border-border rounded-lg shadow-lg w-full',
           sizes[size],
           className
         )}
-        onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              {title}
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h3 className="text-base font-semibold text-primary">{title}</h3>
+            <button
               onClick={onClose}
-              className="w-8 h-8 p-0"
+              className="text-muted hover:text-primary rounded-md p-1 transition-colors"
               aria-label="Close modal"
             >
               <X className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         )}
-        <div className="p-4">{children}</div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
 };
-

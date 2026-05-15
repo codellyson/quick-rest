@@ -29,7 +29,7 @@ export const CodeEditor = ({
   return (
     <div
       className={cn(
-        "border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden",
+        "border border-border rounded-md overflow-hidden",
         height === "100%" && "h-full",
         className
       )}

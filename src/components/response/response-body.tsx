@@ -36,7 +36,7 @@ export const ResponseBody = ({ response }: ResponseBodyProps) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-end gap-2 p-2 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center justify-end gap-2 p-2 border-b border-border">
         <Button
           variant="secondary"
           size="sm"

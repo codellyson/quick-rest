@@ -18,8 +18,8 @@ export const ResponsePanel = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Sending request...</p>
+          <Loader2 className="w-6 h-6 animate-spin text-muted" />
+          <p className="text-sm text-secondary">Sending request…</p>
         </div>
       </div>
     );
@@ -27,10 +27,8 @@ export const ResponsePanel = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
-        </div>
+      <div className="flex items-center justify-center h-full px-6">
+        <p className="text-sm text-danger font-medium text-center">{error}</p>
       </div>
     );
   }
@@ -38,7 +36,7 @@ export const ResponsePanel = () => {
   if (!response) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-zinc-500 dark:text-zinc-400">No response yet</p>
+        <p className="text-sm text-muted">No response yet</p>
       </div>
     );
   }
@@ -47,16 +45,16 @@ export const ResponsePanel = () => {
     <div className="flex flex-col h-full">
       <ResponseMeta response={response} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex border-b border-border">
           {(['body', 'headers'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                'px-4 py-2.5 text-sm font-medium transition-all duration-150 border-b-2',
+                'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
                 activeTab === tab
-                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                  ? 'border-accent text-primary'
+                  : 'border-transparent text-secondary hover:text-primary'
               )}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}

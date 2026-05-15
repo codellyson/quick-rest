@@ -27,3 +27,6 @@ dist-ssr
 .router
 .next
 
+# TypeScript incremental build
+*.tsbuildinfo
+

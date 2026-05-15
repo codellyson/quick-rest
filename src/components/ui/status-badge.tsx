@@ -6,28 +6,21 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export const StatusBadge = ({ status, text, className }: StatusBadgeProps) => {
-  const getStatusColor = (code: number) => {
-    if (code >= 200 && code < 300) {
-      return 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900';
-    }
-    if (code >= 300 && code < 400) {
-      return 'bg-zinc-500 text-white';
-    }
-    if (code >= 400 && code < 500) {
-      return 'bg-zinc-600 text-white';
-    }
-    if (code >= 500) {
-      return 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900';
-    }
-    return 'bg-zinc-500 text-white';
-  };
+const getStatusStyles = (code: number) => {
+  if (code === 0) return 'bg-bg-secondary text-muted';
+  if (code >= 200 && code < 300) return 'bg-success/10 text-success';
+  if (code >= 300 && code < 400) return 'bg-accent/10 text-accent';
+  if (code >= 400 && code < 500) return 'bg-warning/10 text-warning';
+  if (code >= 500) return 'bg-danger/10 text-danger';
+  return 'bg-bg-secondary text-muted';
+};
 
+export const StatusBadge = ({ status, text, className }: StatusBadgeProps) => {
   return (
     <span
       className={cn(
-        'px-2.5 py-1 rounded-md text-xs font-medium',
-        getStatusColor(status),
+        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+        getStatusStyles(status),
         className
       )}
     >
@@ -35,4 +28,3 @@ export const StatusBadge = ({ status, text, className }: StatusBadgeProps) => {
     </span>
   );
 };
-

@@ -26,10 +26,10 @@ const icons = {
 };
 
 const styles = {
-  success: 'bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100',
-  error: 'bg-zinc-50 dark:bg-zinc-800 border border-red-600 dark:border-red-500 text-red-600 dark:text-red-400',
-  warning: 'bg-zinc-50 dark:bg-zinc-800 border border-zinc-500 dark:border-zinc-500 text-zinc-600 dark:text-zinc-400',
-  info: 'bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-600 text-zinc-500 dark:text-zinc-400',
+  success: 'bg-bg border border-border text-success',
+  error: 'bg-bg border border-danger/30 text-danger',
+  warning: 'bg-bg border border-warning/30 text-warning',
+  info: 'bg-bg border border-border text-accent',
 };
 
 export const ToastItem = ({ toast, onClose }: ToastProps) => {
@@ -46,20 +46,20 @@ export const ToastItem = ({ toast, onClose }: ToastProps) => {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-4 rounded-lg border',
-        'min-w-[300px] max-w-md',
+        'flex items-start gap-3 p-3 rounded-md shadow-lg',
+        'min-w-[280px] max-w-md',
         styles[toast.type],
         'animate-in slide-in-from-top-5'
       )}
     >
-      <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
-      <p className="flex-1 text-sm font-medium">{toast.message}</p>
+      <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+      <p className="flex-1 text-sm text-primary">{toast.message}</p>
       <button
         onClick={() => onClose(toast.id)}
-        className="flex-shrink-0 text-current opacity-70 hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 text-muted hover:text-primary transition-colors"
         aria-label="Close toast"
       >
-        <X className="w-4 h-4" />
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
   );
@@ -81,4 +81,3 @@ export const ToastContainer = ({ toasts, onClose }: ToastContainerProps) => {
     </div>
   );
 };
-

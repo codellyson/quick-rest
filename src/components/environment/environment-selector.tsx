@@ -1,27 +1,17 @@
 'use client';
 
 import { useEnvironmentStore } from '../../stores/use-environment-store';
-import { cn } from '../../utils/cn';
 
 export const EnvironmentSelector = () => {
   const { environments, activeEnvironmentId, setActiveEnvironmentId } = useEnvironmentStore();
 
-  // const activeEnv = environments.find((env) => env.id === activeEnvironmentId);
-
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-        Environment
-      </label>
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-secondary">Environment</label>
       <select
         value={activeEnvironmentId || ''}
         onChange={(e) => setActiveEnvironmentId(e.target.value)}
-        className={cn(
-          'w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg',
-          'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100',
-          'focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100',
-          'transition-colors duration-150'
-        )}
+        className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-bg text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
       >
         {environments.map((env) => (
           <option key={env.id} value={env.id}>
@@ -32,4 +22,3 @@ export const EnvironmentSelector = () => {
     </div>
   );
 };
-

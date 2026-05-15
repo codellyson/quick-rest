@@ -1,29 +1,27 @@
 'use client';
 
 import { useRequestStore } from '../../stores/use-request-store';
-import { useP2PStore } from '../../stores/use-p2p-store';
 import { Input } from '../ui/input';
 import { cn } from '../../utils/cn';
 
 export const AuthConfig = () => {
   const { authType, authConfig, setAuthType, setAuthConfig } = useRequestStore();
-  const { setEditingField } = useP2PStore();
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
+      <div className="inline-flex p-0.5 bg-bg-secondary rounded-md">
         {(['none', 'bearer', 'basic', 'api-key'] as const).map((type) => (
           <button
             key={type}
             onClick={() => setAuthType(type)}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150',
+              'px-3 py-1 text-xs font-medium rounded transition-colors',
               authType === type
-                ? 'bg-zinc-900 text-white'
-                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                ? 'bg-bg text-primary shadow-sm'
+                : 'text-secondary hover:text-primary'
             )}
           >
-            {type === 'api-key' ? 'API Key' : type.charAt(0).toUpperCase() + type.slice(1)}
+            {type === 'api-key' ? 'API key' : type === 'none' ? 'None' : type.charAt(0).toUpperCase() + type.slice(1)}
           </button>
         ))}
       </div>
@@ -33,8 +31,6 @@ export const AuthConfig = () => {
           type="password"
           value={authConfig.bearerToken || ''}
           onChange={(e) => setAuthConfig({ bearerToken: e.target.value })}
-          onFocus={() => setEditingField('authConfig', true)}
-          onBlur={() => setEditingField('authConfig', false)}
           placeholder="Enter bearer token"
         />
       )}
@@ -44,8 +40,6 @@ export const AuthConfig = () => {
             label="Username"
             value={authConfig.username || ''}
             onChange={(e) => setAuthConfig({ username: e.target.value })}
-            onFocus={() => setEditingField('authConfig', true)}
-            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter username"
           />
           <Input
@@ -53,8 +47,6 @@ export const AuthConfig = () => {
             type="password"
             value={authConfig.password || ''}
             onChange={(e) => setAuthConfig({ password: e.target.value })}
-            onFocus={() => setEditingField('authConfig', true)}
-            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter password"
           />
         </div>
@@ -66,16 +58,12 @@ export const AuthConfig = () => {
             type="password"
             value={authConfig.apiKey || ''}
             onChange={(e) => setAuthConfig({ apiKey: e.target.value })}
-            onFocus={() => setEditingField('authConfig', true)}
-            onBlur={() => setEditingField('authConfig', false)}
             placeholder="Enter API key"
           />
           <Input
             label="Header Name"
             value={authConfig.apiKeyHeader || 'X-API-Key'}
             onChange={(e) => setAuthConfig({ apiKeyHeader: e.target.value })}
-            onFocus={() => setEditingField('authConfig', true)}
-            onBlur={() => setEditingField('authConfig', false)}
             placeholder="X-API-Key"
           />
         </div>
@@ -83,4 +71,3 @@ export const AuthConfig = () => {
     </div>
   );
 };
-

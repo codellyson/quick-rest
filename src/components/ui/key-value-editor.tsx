@@ -234,11 +234,11 @@ export const KeyValueEditor = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center text-sm font-medium text-zinc-600 dark:text-zinc-400 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center text-xs font-medium text-muted pb-2 border-b border-border">
         <div>{keyPlaceholder}</div>
         <div>{valuePlaceholder}</div>
-        <div className="text-center">Enabled</div>
-        <div></div>
+        <div className="text-center px-1">On</div>
+        <div className="w-7"></div>
       </div>
       {items.map((item) => (
         <div
@@ -273,7 +273,7 @@ export const KeyValueEditor = ({
                 ref={(el) => {
                   if (el) suggestionRefs.current[item.id] = el;
                 }}
-                className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg max-h-48 overflow-auto"
+                className="absolute z-50 top-full mt-1 left-0 right-0 bg-bg border border-border rounded-md shadow-lg max-h-48 overflow-auto"
               >
                 {filteredSuggestions.map((suggestion, index) => (
                   <button
@@ -281,11 +281,11 @@ export const KeyValueEditor = ({
                     type="button"
                     onClick={() => selectSuggestion(item.id, suggestion)}
                     className={cn(
-                      "w-full px-3 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
-                      index === selectedIndex && "bg-zinc-100 dark:bg-zinc-800"
+                      "w-full px-3 py-1.5 text-left text-sm hover:bg-bg-secondary transition-colors",
+                      index === selectedIndex && "bg-bg-secondary"
                     )}
                   >
-                    <div className="font-mono text-zinc-900 dark:text-zinc-100">{suggestion}</div>
+                    <div className="text-primary font-mono">{suggestion}</div>
                   </button>
                 ))}
               </div>
@@ -306,7 +306,7 @@ export const KeyValueEditor = ({
               onChange={(e) =>
                 updateItem(item.id, { enabled: e.target.checked })
               }
-              className="w-4 h-4 text-zinc-900 dark:text-zinc-100 rounded focus:ring-zinc-900 dark:focus:ring-zinc-100"
+              className="w-4 h-4 accent-[rgb(var(--accent))] cursor-pointer"
             />
           </div>
           <Button
@@ -321,13 +321,13 @@ export const KeyValueEditor = ({
         </div>
       ))}
       <Button
-        variant="secondary"
+        variant="ghost"
         size="sm"
         onClick={addItem}
-        className="w-full"
+        className="w-full justify-start"
       >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Row
+        <Plus className="w-3.5 h-3.5 mr-1.5" />
+        Add row
       </Button>
     </div>
   );

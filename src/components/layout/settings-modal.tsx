@@ -70,16 +70,16 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings" size="md">
       <div className="flex flex-col h-[400px]">
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 mb-3">
+        <div className="flex border-b border-border mb-3">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-4 py-2 text-sm font-medium transition-all duration-150 border-b-2",
+                "px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
                 activeTab === tab.id
-                  ? "border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100"
-                  : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  ? "border-accent text-primary"
+                  : "border-transparent text-secondary hover:text-primary"
               )}
             >
               {tab.label}
@@ -115,17 +115,17 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 {environments.map((env) => (
                   <div
                     key={env.id}
-                    className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5"
+                    className="border border-border rounded-md p-2.5"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <h3 className="text-sm font-medium text-primary">
                         {env.name}
                       </h3>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteEnvironment(env.id)}
-                        className="w-7 h-7 p-0 text-red-600 hover:text-red-700"
+                        className="w-7 h-7 p-0 text-danger hover:bg-danger/10"
                         disabled={environments.length <= 1}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -138,15 +138,15 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           key={key}
                           className="flex items-center gap-2 text-xs"
                         >
-                          <span className="text-zinc-600 dark:text-zinc-400 font-mono text-xs">
+                          <span className="text-secondary font-mono text-xs">
                             {key}:
                           </span>
-                          <span className="text-zinc-900 dark:text-zinc-100 font-mono flex-1 truncate text-xs">
+                          <span className="text-primary font-mono flex-1 truncate text-xs">
                             {value}
                           </span>
                           <button
                             onClick={() => handleRemoveVariable(env.id, key)}
-                            className="text-zinc-400 hover:text-red-600"
+                            className="text-muted hover:text-danger"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -193,7 +193,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           className="w-full mt-1.5 text-xs"
                         >
                           <Plus className="w-3 h-3 mr-1" />
-                          Add Variable
+                          Add variable
                         </Button>
                       )}
                     </div>
@@ -205,11 +205,11 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
           {activeTab === "data" && (
             <div className="space-y-2.5">
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1.5">
+              <div className="border border-border rounded-md p-3">
+                <h3 className="text-sm font-medium text-primary mb-1.5">
                   Clear Collections
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">
+                <p className="text-xs text-secondary mb-2">
                   Remove all saved requests from your collections.
                 </p>
                 <Button
@@ -226,15 +226,15 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   }}
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  Clear All Collections
+                  Clear all collections
                 </Button>
               </div>
 
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1.5">
-                  Clear History
+              <div className="border border-border rounded-md p-3">
+                <h3 className="text-sm font-medium text-primary mb-1.5">
+                  Clear history
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">
+                <p className="text-xs text-secondary mb-2">
                   Remove all items from your request history.
                 </p>
                 <Button
@@ -251,18 +251,18 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   }}
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                  Clear History
+                  Clear history
                 </Button>
               </div>
 
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-3">
-                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1.5">
+              <div className="border border-border rounded-md p-3">
+                <h3 className="text-sm font-medium text-primary mb-1.5">
                   About
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                  QuickRest - A modern API testing tool
+                <p className="text-xs text-secondary">
+                  QuickRest — a simple REST API client
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   Version 1.0.0
                 </p>
               </div>

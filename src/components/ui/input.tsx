@@ -7,30 +7,33 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className, ...props }, ref) => {
+  ({ label, error, className, id: providedId, ...props }, ref) => {
+    const id = providedId || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    const errorId = id ? `${id}-error` : undefined;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-0.5">
+          <label htmlFor={id} className="block text-sm font-medium text-primary mb-1.5">
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={id}
           className={cn(
-            'w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg',
-            'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100',
-            'placeholder:text-zinc-400',
-            'focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100',
-            'transition-colors duration-150',
-            'disabled:opacity-40 disabled:cursor-not-allowed',
-            error && 'border-red-600 dark:border-red-500 focus:ring-red-600 focus:border-red-600',
+            'w-full px-3 py-2 rounded-md border text-sm text-primary bg-bg placeholder:text-muted',
+            'focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent',
+            'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+            error ? 'border-danger focus:ring-danger' : 'border-border',
             className
           )}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error && errorId ? errorId : undefined}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p id={errorId} role="alert" className="mt-1.5 text-sm text-danger">{error}</p>
         )}
       </div>
     );
@@ -38,4 +41,3 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
-

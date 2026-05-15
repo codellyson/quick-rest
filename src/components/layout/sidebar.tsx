@@ -1,159 +1,123 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Settings, Moon, Sun, History, Folder, Globe } from "lucide-react";
-import { useAppStore } from "../../stores/use-app-store";
+import { Settings, Moon, Sun, X } from "lucide-react";
+import { useTheme } from "../../contexts/theme-context";
 import { CollectionsList } from "../collections/collections-list";
 import { HistoryPanel } from "../history/history-panel";
 import { EnvironmentSelector } from "../environment/environment-selector";
 import { Button } from "../ui/button";
 import { Logo } from "../ui/logo";
 import { SettingsModal } from "./settings-modal";
+import { cn } from "../../utils/cn";
 
-type SidebarSection = "collections" | "history" | "environments";
+type SidebarSection = "collections" | "history";
 
-export const Sidebar = () => {
-  const router = useRouter();
-  const { theme, toggleTheme } = useAppStore();
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const sections: { id: SidebarSection; label: string }[] = [
+  { id: "collections", label: "Collections" },
+  { id: "history", label: "History" },
+];
+
+export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+  const { mode, toggleMode } = useTheme();
   const [activeSection, setActiveSection] =
     useState<SidebarSection>("collections");
-  const [collapsed, setCollapsed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  if (collapsed) {
-    return (
-      <div className="w-16 border-r border-zinc-200 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center py-4 gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(false)}
-          className="w-10 h-10"
-        >
-          <Folder className="w-5 h-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(false)}
-          className="w-10 h-10"
-        >
-          <History className="w-5 h-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(false)}
-          className="w-10 h-10"
-        >
-          <Globe className="w-5 h-5" />
-        </Button>
-        <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          className="w-10 h-10"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowSettings(true)}
-          className="w-10 h-10"
-          aria-label="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-64 border-r border-zinc-200 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950 flex flex-col h-full">
-      <div className="p-4 border-b border-zinc-200 dark:border-zinc-900">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => router.push("/")}
-            className="hover:opacity-80 transition-opacity cursor-pointer"
-            aria-label="Go to home"
-          >
-            <Logo variant="default" className="h-11" />
-          </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCollapsed(true)}
-            className="w-8 h-8 p-0"
-            aria-label="Collapse sidebar"
-          >
-            <span className="text-zinc-600 dark:text-zinc-400">←</span>
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={activeSection === "collections" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => setActiveSection("collections")}
-            className="flex-1"
-          >
-            <Folder className="w-4 h-4 mr-1" />
-            Collections
-          </Button>
-          <Button
-            variant={activeSection === "history" ? "primary" : "secondary"}
-            size="sm"
-            onClick={() => setActiveSection("history")}
-            className="flex-1"
-          >
-            <History className="w-4 h-4 mr-1" />
-            History
-          </Button>
-        </div>
-      </div>
-      <div className="flex-1 overflow-auto">
-        {activeSection === "collections" && <CollectionsList />}
-        {activeSection === "history" && <HistoryPanel />}
-      </div>
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-900 space-y-2">
-        <EnvironmentSelector />
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className="flex-1"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 mr-2" />
-            ) : (
-              <Moon className="w-4 h-4 mr-2" />
-            )}
-            {theme === "dark" ? "Light" : "Dark"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(true)}
-            className="flex-1"
-            aria-label="Settings"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button>
-        </div>
-      </div>
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+    <>
+      {/* Backdrop — mobile only */}
+      <div
+        className={cn(
+          "fixed inset-0 z-30 bg-black/50 lg:hidden transition-opacity",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onClose}
+        aria-hidden="true"
       />
-    </div>
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] bg-bg-secondary",
+          "border-r border-border",
+          "flex flex-col h-full transition-transform duration-150",
+          "lg:static lg:translate-x-0 lg:w-64 lg:max-w-none lg:z-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="px-4 py-3 border-b border-border">
+          <div className="flex items-center justify-between mb-3">
+            <Logo variant="default" className="h-8" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="w-7 h-7 p-0 lg:hidden"
+              aria-label="Close sidebar"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex border-b border-border -mb-3">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={cn(
+                  "px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+                  activeSection === section.id
+                    ? "border-accent text-primary"
+                    : "border-transparent text-secondary hover:text-primary"
+                )}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto">
+          {activeSection === "collections" && <CollectionsList />}
+          {activeSection === "history" && <HistoryPanel />}
+        </div>
+        <div className="px-4 py-3 border-t border-border space-y-2">
+          <EnvironmentSelector />
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMode}
+              className="flex-1"
+              aria-label="Toggle theme"
+            >
+              {mode === "dark" ? (
+                <Sun className="w-3.5 h-3.5 mr-1.5" />
+              ) : (
+                <Moon className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              {mode === "dark" ? "Light" : "Dark"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSettings(true)}
+              className="flex-1"
+              aria-label="Settings"
+            >
+              <Settings className="w-3.5 h-3.5 mr-1.5" />
+              Settings
+            </Button>
+          </div>
+        </div>
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      </aside>
+    </>
   );
 };

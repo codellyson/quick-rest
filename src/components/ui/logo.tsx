@@ -22,7 +22,7 @@ export const Logo = ({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={cn(
-        "object-contain text-zinc-900 dark:text-zinc-100",
+        "object-contain text-primary",
         className
       )}
     >
