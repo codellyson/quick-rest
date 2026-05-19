@@ -5,11 +5,28 @@ import './globals.css';
 import { Providers } from './providers';
 import { BUILT_IN_THEMES, DEFAULT_THEME_ID } from '../src/utils/theme-plugins';
 
+const SITE_URL = 'https://justapi.kreativekorna.com';
+const TITLE = 'JUSTAPI — REST testing without the bloat';
+const DESCRIPTION =
+  'A fast, mobile-first REST API client. Compose, send, save, and replay HTTP requests in the browser. Capture live traffic with the companion extension.';
+
 export const metadata: Metadata = {
-  title: 'JUSTAPI — REST API client',
-  description: 'A simple REST API client.',
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
   applicationName: 'JUSTAPI',
   manifest: '/manifest.webmanifest',
+  keywords: [
+    'REST client',
+    'API testing',
+    'HTTP client',
+    'Postman alternative',
+    'API debugger',
+    'JUSTAPI',
+  ],
+  authors: [{ name: 'KreativeKorna' }],
+  creator: 'KreativeKorna',
+  publisher: 'KreativeKorna',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -22,6 +39,20 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'JUSTAPI',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'JUSTAPI',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+    creator: '@kreativekorna',
   },
 };
 
