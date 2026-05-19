@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useRequestStore } from "../stores/use-request-store";
 import { useResponseStore } from "../stores/use-response-store";
 import { useHistoryStore } from "../stores/use-history-store";
@@ -7,17 +7,32 @@ import { sendRequest, RequestConfig } from "../utils/http";
 import { replaceDynamicVariables, replaceVariables } from "../utils/variables";
 import { buildMultipart, buildUrlEncoded, hasEnabledFile } from "../utils/form-data";
 
+const isAbort = (err: unknown): boolean =>
+  err instanceof DOMException && err.name === "AbortError";
+
 export const useRequest = () => {
   const request = useRequestStore();
   const { setResponse, setLoading, setError } = useResponseStore();
   const { addItem: addHistoryItem } = useHistoryStore();
   const { getVariables } = useEnvironmentStore();
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
 
   const send = useCallback(async () => {
     if (!request.url.trim()) {
       setError("URL is required");
       return;
     }
+
+    // If a previous request is still in flight, abort it before kicking off
+    // a new one. Avoids two responses racing for setResponse.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     setLoading(true);
     setError(null);
@@ -100,7 +115,8 @@ export const useRequest = () => {
         body,
       };
 
-      const response = await sendRequest(config);
+      const response = await sendRequest(config, controller.signal);
+      if (controller.signal.aborted) return;
       setResponse(response);
       addHistoryItem({
         method: request.method,
@@ -108,10 +124,12 @@ export const useRequest = () => {
         status: response.status,
       });
     } catch (error) {
+      if (isAbort(error)) return;
       const errorMessage =
         error instanceof Error ? error.message : "Request failed";
       setError(errorMessage);
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setLoading(false);
     }
   }, [
@@ -123,5 +141,5 @@ export const useRequest = () => {
     addHistoryItem,
   ]);
 
-  return { send };
+  return { send, cancel };
 };

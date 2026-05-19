@@ -19,9 +19,75 @@ export interface ShareableRequestConfig {
   };
 }
 
-export const generateShareableLink = (): string => {
-  const state = useRequestStore.getState();
+type CompactKV = { k: string; v?: string };
+type CompactWire = {
+  m?: string;            // method (omitted when GET)
+  u: string;             // url
+  p?: CompactKV[];       // params
+  h?: CompactKV[];       // headers
+  bt?: string;           // bodyType (omitted when none)
+  b?: string;            // body
+  at?: string;           // authType (omitted when none)
+  ac?: ShareableRequestConfig['authConfig'];
+};
 
+const compactKVs = (items: KeyValuePair[]): CompactKV[] =>
+  items
+    .filter((it) => it.enabled && it.key)
+    .map((it) => (it.value ? { k: it.key, v: it.value } : { k: it.key }));
+
+const expandKVs = (items: CompactKV[] | undefined): KeyValuePair[] =>
+  (items || []).map((it, i) => ({
+    id: String(i + 1),
+    key: it.k,
+    value: it.v || '',
+    enabled: true,
+  }));
+
+const compact = (cfg: ShareableRequestConfig): CompactWire => {
+  const wire: CompactWire = { u: cfg.url };
+  if (cfg.method && cfg.method !== 'GET') wire.m = cfg.method;
+  const params = compactKVs(cfg.params);
+  if (params.length) wire.p = params;
+  const headers = compactKVs(cfg.headers);
+  if (headers.length) wire.h = headers;
+  if (cfg.bodyType && cfg.bodyType !== 'none') wire.bt = cfg.bodyType;
+  if (cfg.body) wire.b = cfg.body;
+  if (cfg.authType && cfg.authType !== 'none') wire.at = cfg.authType;
+  if (cfg.authConfig && Object.keys(cfg.authConfig).length > 0) {
+    wire.ac = cfg.authConfig;
+  }
+  return wire;
+};
+
+const expand = (wire: CompactWire): ShareableRequestConfig => ({
+  method: wire.m || 'GET',
+  url: wire.u || '',
+  params: expandKVs(wire.p),
+  headers: expandKVs(wire.h),
+  bodyType: wire.bt || 'none',
+  body: wire.b || '',
+  authType: wire.at || 'none',
+  authConfig: wire.ac || {},
+});
+
+const toBase64Url = (str: string): string => {
+  const b64 = typeof btoa === 'function'
+    ? btoa(unescape(encodeURIComponent(str)))
+    : Buffer.from(str, 'utf-8').toString('base64');
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+const fromBase64Url = (str: string): string => {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+  return typeof atob === 'function'
+    ? decodeURIComponent(escape(atob(padded)))
+    : Buffer.from(padded, 'base64').toString('utf-8');
+};
+
+function currentWire(): { config: ShareableRequestConfig; wire: CompactWire } {
+  const state = useRequestStore.getState();
   const config: ShareableRequestConfig = {
     method: state.method,
     url: state.url,
@@ -30,28 +96,74 @@ export const generateShareableLink = (): string => {
     bodyType: state.bodyType,
     body: state.body,
     authType: state.authType,
-    // Exclude credentials from shared links when auth is configured
     authConfig: state.authType === 'none' ? state.authConfig : {},
   };
+  return { config, wire: compact(config) };
+}
 
-  const encoded = encodeURIComponent(JSON.stringify(config));
-  return `${window.location.origin}/#share=${encoded}`;
+function fragmentLink(wire: CompactWire): string {
+  const encoded = toBase64Url(JSON.stringify(wire));
+  return `${window.location.origin}/#s=${encoded}`;
+}
+
+/**
+ * Tries the share API first for a short `?s=ID` URL. Falls back to the
+ * self-contained fragment URL on any failure (offline, API down, no
+ * storage configured), so the user always gets a working link.
+ */
+export const generateShareableLink = async (): Promise<string> => {
+  const { wire } = currentWire();
+  try {
+    const res = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(wire),
+    });
+    if (res.ok) {
+      const { id } = (await res.json()) as { id?: string };
+      if (id) return `${window.location.origin}/?s=${id}`;
+    }
+  } catch {
+    /* fall through */
+  }
+  return fragmentLink(wire);
 };
 
-export const loadConfigFromUrl = (): ShareableRequestConfig | null => {
+export const loadConfigFromUrl = async (): Promise<ShareableRequestConfig | null> => {
   if (typeof window === 'undefined') return null;
 
-  const hash = window.location.hash;
-  const shareMatch = hash.match(/^#share=([^&]+)/);
-  if (!shareMatch) return null;
-
-  try {
-    const decoded = decodeURIComponent(shareMatch[1]);
-    return JSON.parse(decoded) as ShareableRequestConfig;
-  } catch (error) {
-    console.error('Failed to decode shared request config:', error);
+  const url = new URL(window.location.href);
+  const shareId = url.searchParams.get('s');
+  if (shareId) {
+    try {
+      const res = await fetch(`/api/share/${encodeURIComponent(shareId)}`);
+      if (res.ok) {
+        const wire = (await res.json()) as CompactWire;
+        return expand(wire);
+      }
+    } catch (error) {
+      console.error('Failed to fetch shared request:', error);
+    }
     return null;
   }
+
+  const hash = window.location.hash;
+  const compactMatch = hash.match(/^#s=([^&]+)/);
+  const legacyMatch = hash.match(/^#share=([^&]+)/);
+  try {
+    if (compactMatch) {
+      const json = fromBase64Url(compactMatch[1]);
+      const wire = JSON.parse(json) as CompactWire;
+      return expand(wire);
+    }
+    if (legacyMatch) {
+      const decoded = decodeURIComponent(legacyMatch[1]);
+      return JSON.parse(decoded) as ShareableRequestConfig;
+    }
+  } catch (error) {
+    console.error('Failed to decode shared request config:', error);
+  }
+  return null;
 };
 
 export const applySharedConfig = (config: ShareableRequestConfig): void => {

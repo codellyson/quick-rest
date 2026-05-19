@@ -1,6 +1,6 @@
 'use client';
 
-import { Send, Save, Edit, AlertCircle, Share2, Check, Menu, Code2 } from "lucide-react";
+import { Send, Save, Edit, AlertCircle, Share2, Check, Menu, Code2, X } from "lucide-react";
 import { useRequestStore } from "../../stores/use-request-store";
 import { useRequest } from "../../hooks/use-request";
 import { useResponseStore } from "../../stores/use-response-store";
@@ -23,7 +23,7 @@ interface TopBarProps {
 }
 
 export const TopBar = ({ onOpenSidebar }: TopBarProps) => {
-  const { send } = useRequest();
+  const { send, cancel } = useRequest();
   const { loading } = useResponseStore();
   const { showToast } = useToastStore();
   const {
@@ -96,7 +96,7 @@ export const TopBar = ({ onOpenSidebar }: TopBarProps) => {
 
   const handleShare = async () => {
     try {
-      const shareLink = generateShareableLink();
+      const shareLink = await generateShareableLink();
       await navigator.clipboard.writeText(shareLink);
       setShareLinkCopied(true);
       showToast("success", "Share link copied!");
@@ -144,17 +144,30 @@ export const TopBar = ({ onOpenSidebar }: TopBarProps) => {
             </Button>
             <MethodSelector value={method} onChange={setMethod} />
             <URLInput />
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={send}
-              disabled={loading || !url.trim()}
-              title="Send request (⌘/Ctrl+Enter)"
-              className="shrink-0 px-3.5"
-            >
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Send</span>
-            </Button>
+            {loading ? (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={cancel}
+                title="Cancel request"
+                className="shrink-0 px-3.5"
+              >
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={send}
+                disabled={!url.trim()}
+                title="Send request (⌘/Ctrl+Enter)"
+                className="shrink-0 px-3.5"
+              >
+                <Send className="w-4 h-4" />
+                <span className="hidden sm:inline">Send</span>
+              </Button>
+            )}
           </div>
           <div className="flex items-center justify-end gap-1">
             <Button

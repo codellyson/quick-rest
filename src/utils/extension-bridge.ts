@@ -69,6 +69,8 @@ class ExtensionBridge {
   private port: ChromePort | null = null;
   private listeners = new Set<Listener>();
   private connectListeners = new Set<(connected: boolean) => void>();
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempt = 0;
 
   /** Ask the content script for the extension ID. Resolves null if no reply. */
   async discover(timeoutMs = 2500): Promise<string | null> {
@@ -126,15 +128,29 @@ class ExtensionBridge {
       port.onDisconnect.addListener(() => {
         this.port = null;
         for (const l of this.connectListeners) l(false);
+        this.scheduleReconnect();
       });
       this.port = port;
+      this.reconnectAttempt = 0;
       console.log('[JUSTAPI] connected to extension');
       for (const l of this.connectListeners) l(true);
       return true;
     } catch (e) {
       console.error('[JUSTAPI] connect failed:', e);
+      this.scheduleReconnect();
       return false;
     }
+  }
+
+  private scheduleReconnect() {
+    if (this.reconnectTimer || !this.extensionId) return;
+    const delay = Math.min(10000, 500 * 2 ** Math.min(this.reconnectAttempt, 5));
+    this.reconnectAttempt += 1;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (this.port) return;
+      this.connect();
+    }, delay);
   }
 
   send(msg: unknown) {

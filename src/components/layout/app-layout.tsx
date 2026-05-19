@@ -42,17 +42,18 @@ export const AppLayout = () => {
   }, []);
 
   useEffect(() => {
-    const config = loadConfigFromUrl();
-    if (config) {
+    let cancelled = false;
+    (async () => {
+      const config = await loadConfigFromUrl();
+      if (cancelled || !config) return;
       applySharedConfig(config);
       if (window.history.replaceState) {
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + window.location.search
-        );
+        window.history.replaceState(null, "", window.location.pathname);
       }
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

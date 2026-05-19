@@ -76,14 +76,29 @@ export function useExtension() {
       }
     });
 
+    // Ride out transient SW respawns (Chrome force-suspends ~5min) without
+    // flipping the panel to the empty install state, which hides captures.
+    let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
     const unsubConn = extensionBridge.onConnectionChange((connected) => {
-      if (!connected) store().setStatus('no-extension');
+      if (connected) {
+        if (disconnectTimer) {
+          clearTimeout(disconnectTimer);
+          disconnectTimer = null;
+        }
+        return;
+      }
+      if (disconnectTimer) return;
+      disconnectTimer = setTimeout(() => {
+        disconnectTimer = null;
+        if (!extensionBridge.isConnected) store().setStatus('no-extension');
+      }, 8000);
     });
 
     return () => {
       cancelled = true;
       unsubMsg();
       unsubConn();
+      if (disconnectTimer) clearTimeout(disconnectTimer);
     };
   }, [store]);
 }
