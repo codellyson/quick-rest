@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Drawer } from "vaul";
+import { Share2, Check } from "lucide-react";
 import type { Card } from "../types";
 import { useStackStore } from "../use-stack-store";
 import { useDraftStore } from "../use-draft-store";
+import { useToastStore } from "../../stores/use-toast-store";
 import { computeDrift, formatSize } from "../drift";
 import { hostAccent } from "../host";
+import { shareCard } from "../share";
 import { DriftLine } from "./drift-line";
 import { MethodPill } from "./method-pill";
 import { ResultTabs } from "./result-tabs";
@@ -52,6 +55,18 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
     onOpenChange(false);
   };
 
+  const [shareCopied, setShareCopied] = useState(false);
+  const onShare = async () => {
+    const link = await shareCard(card);
+    if (link) {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 1500);
+      useToastStore.getState().showToast("info", "Share link copied");
+    } else {
+      useToastStore.getState().showToast("error", "Couldn't share");
+    }
+  };
+
   return (
     <Drawer.Root
       open={open}
@@ -77,6 +92,25 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
               title="Click to edit & close"
             >
               {card.url}
+            </button>
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-1.5 text-[11px] text-secondary hover:text-primary font-mono shrink-0"
+              title="Copy share link"
+              aria-label="Share this request"
+            >
+              {shareCopied ? (
+                <>
+                  <Check className="w-3 h-3" />
+                  copied
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3 h-3" />
+                  share
+                </>
+              )}
             </button>
             <span className="text-[10px] text-muted font-mono shrink-0">
               esc · drag to close

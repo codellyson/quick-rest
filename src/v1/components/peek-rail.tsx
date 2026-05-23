@@ -8,7 +8,9 @@ import {
 import { useWorkspaceStore } from "../use-workspace-store";
 import { MethodPill } from "./method-pill";
 import { StatusBadge } from "../../components/ui/status-badge";
-import { Layers, Trash2 } from "lucide-react";
+import { Layers, Trash2, Share2 } from "lucide-react";
+import { shareCard } from "../share";
+import { useToastStore } from "../../stores/use-toast-store";
 
 const MAX_PEEKS = 4;
 const OVERLAP = 12;
@@ -86,6 +88,24 @@ export const PeekRail = ({ onShowMore }: PeekRailProps) => {
                     className="shrink-0"
                   />
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const link = await shareCard(card);
+                  useToastStore
+                    .getState()
+                    .showToast(
+                      link ? "info" : "error",
+                      link ? "Share link copied" : "Couldn't share"
+                    );
+                }}
+                className="h-full px-2.5 text-muted hover:text-primary hover:bg-bg/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Copy share link"
+                aria-label="Share request"
+              >
+                <Share2 className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"

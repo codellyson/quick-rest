@@ -148,22 +148,29 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   },
   {
     name: "/share",
-    hint: "copy short share link",
+    hint: "copy short share link for the current draft",
     run: async () => {
       const d = useDraftStore.getState();
       if (!d.url.trim()) {
         toast("Nothing to share — input is empty", "error");
         return;
       }
-      const legacy = useRequestStore.getState();
-      legacy.setMethod(d.method);
-      legacy.setUrl(d.url);
-      legacy.setBodyType(d.bodyType);
-      legacy.setBody(d.body);
-      legacy.setAuthType(d.authType);
-      legacy.setAuthConfig(d.authConfig);
       const sharing = await import("../utils/sharing");
-      const url = await sharing.generateShareableLink();
+      const url = await sharing.generateShareableLink({
+        method: d.method,
+        url: d.url,
+        params: [],
+        headers: Object.entries(d.headers).map(([k, v], i) => ({
+          id: String(i + 1),
+          key: k,
+          value: v,
+          enabled: true,
+        })),
+        bodyType: d.bodyType,
+        body: d.body,
+        authType: d.authType,
+        authConfig: d.authConfig,
+      });
       const ok = await copyToClipboard(url);
       toast(ok ? "Share link copied" : "Failed to create link", ok ? "info" : "error");
     },

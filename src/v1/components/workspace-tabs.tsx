@@ -146,7 +146,7 @@ export const WorkspaceTabs = () => {
           aria-label="New workspace"
         >
           <Plus className="w-3 h-3" />
-          new
+          new workspace
         </button>
       </div>
     </div>

@@ -1,12 +1,13 @@
 import { useCallback, useRef } from "react";
 import { sendRequest } from "../utils/http";
-import type { RequestConfig } from "../utils/http";
+import type { HttpMethod, RequestConfig } from "../utils/http";
 import { replaceVariables } from "../utils/variables";
 import { useEnvironmentStore } from "../stores/use-environment-store";
 import { useDraftStore } from "./use-draft-store";
 import { useStackStore } from "./use-stack-store";
 import { useWorkspaceStore } from "./use-workspace-store";
 import type { CardRequestSnapshot } from "./types";
+import type { BodyType } from "../stores/use-request-store";
 
 const bodySummary = (
   bodyType: string,
@@ -103,6 +104,11 @@ export const useV1Send = () => {
         : null,
     });
 
+    // Clear the URL field once the request is in-flight so the user can
+    // start typing the next one. Body/auth/headers stick around as
+    // working configuration.
+    useDraftStore.getState().setUrl("");
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -133,4 +139,74 @@ export const useV1Send = () => {
   }, []);
 
   return { send, cancel };
+};
+
+interface DirectInput {
+  method: HttpMethod;
+  url: string;
+  headers?: Record<string, string>;
+  body?: string;
+  bodyType?: BodyType;
+}
+
+/**
+ * Fire a pre-baked request without touching the user's current draft.
+ * Used by example pills and other "send this exact thing" affordances.
+ * Spawns a card in the active workspace and resolves/fails it like a
+ * normal send.
+ */
+export const sendDirect = async (
+  input: DirectInput
+): Promise<string | null> => {
+  const url = input.url.trim();
+  if (!url) return null;
+
+  const env = useEnvironmentStore.getState().getActiveEnvironment();
+  const variables = env?.variables ?? {};
+  const resolvedUrl = replaceVariables(url, variables);
+
+  const headers: Record<string, string> = { ...(input.headers ?? {}) };
+  if (input.body && input.bodyType === "json" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const bodyType: BodyType = input.bodyType ?? "none";
+  const bSum = bodySummary(bodyType, input.body ?? "");
+  const snapshot: CardRequestSnapshot = {
+    method: input.method,
+    url: resolvedUrl,
+    urlRaw: url,
+    headers,
+    body: input.body ?? null,
+    bodyType,
+    authType: "none",
+    authConfig: {},
+  };
+
+  const stack = useStackStore.getState();
+  const workspaceId = useWorkspaceStore.getState().activeWorkspaceId;
+  const cardId = stack.spawn({
+    workspaceId,
+    request: snapshot,
+    env: env ? { id: env.id, name: env.name } : null,
+    auth: { type: "none", summary: authSummary("none") },
+    body: bSum
+      ? { type: bodyType, size: bSum.size, summary: bSum.summary }
+      : null,
+  });
+
+  try {
+    const response = await sendRequest({
+      method: snapshot.method,
+      url: snapshot.url,
+      headers,
+      body: input.body,
+    });
+    useStackStore.getState().resolve(cardId, response);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Request failed";
+    useStackStore.getState().fail(cardId, msg);
+  }
+
+  return cardId;
 };
