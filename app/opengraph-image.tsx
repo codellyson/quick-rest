@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'JustAPI — a fast, mobile-first REST API client.';
+export const alt =
+  'JustAPI — Type, send, drag, send again. An API client built for flow state.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -21,15 +22,26 @@ export default async function OGImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <svg width="64" height="64" viewBox="0 0 128 128">
+          <svg width="56" height="56" viewBox="0 0 128 128">
             <rect x="0" y="0" width="128" height="128" rx="28" fill="#0969da" />
             <path
               d="M 92 24 L 92 76 A 28 28 0 0 1 36 76 L 52 76 A 12 12 0 0 0 76 76 L 76 24 Z"
               fill="#ffffff"
             />
           </svg>
-          <span style={{ fontSize: 36, fontWeight: 700, letterSpacing: -1 }}>
+          <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: -1 }}>
             Just<span style={{ color: '#2f81f7' }}>API</span>
+          </span>
+          <span
+            style={{
+              marginLeft: 16,
+              fontSize: 18,
+              color: '#8d96a0',
+              letterSpacing: 4,
+              textTransform: 'uppercase',
+            }}
+          >
+            API client · built for flow state
           </span>
         </div>
 
@@ -42,7 +54,7 @@ export default async function OGImage() {
               letterSpacing: -3,
             }}
           >
-            REST testing
+            Type, send, drag,
           </div>
           <div
             style={{
@@ -53,19 +65,20 @@ export default async function OGImage() {
               color: '#2f81f7',
             }}
           >
-            without the bloat.
+            send again.
           </div>
           <div
             style={{
-              marginTop: 32,
-              fontSize: 28,
+              marginTop: 28,
+              fontSize: 26,
               color: '#8d96a0',
-              maxWidth: 900,
+              maxWidth: 1000,
               lineHeight: 1.4,
             }}
           >
-            Compose, send, save, and replay HTTP requests in the browser.
-            Capture live traffic with the companion extension.
+            One input. Responses materialize as sheets you can stack,
+            dismiss, and recall. No tab-switching, no sidebars, no
+            dropdowns mid-typing.
           </div>
         </div>
 

@@ -102,17 +102,23 @@ function currentWire(): { config: ShareableRequestConfig; wire: CompactWire } {
 }
 
 function fragmentLink(wire: CompactWire): string {
-  const encoded = toBase64Url(JSON.stringify(wire));
-  return `${window.location.origin}/#s=${encoded}`;
+  return `${window.location.origin}/playground#s=${toBase64Url(JSON.stringify(wire))}`;
 }
 
 /**
- * Tries the share API first for a short `?s=ID` URL. Falls back to the
- * self-contained fragment URL on any failure (offline, API down, no
- * storage configured), so the user always gets a working link.
+ * Tries the share API first for a short `?s=ID` URL on the playground.
+ * Falls back to a self-contained fragment URL on any failure (offline,
+ * API down, no storage configured), so the user always gets a working
+ * link.
+ *
+ * Accepts an optional `config` so any caller — not just the legacy
+ * draft store — can produce a share link. With no argument it reads the
+ * current legacy draft as before, preserving existing call sites.
  */
-export const generateShareableLink = async (): Promise<string> => {
-  const { wire } = currentWire();
+export const generateShareableLink = async (
+  config?: ShareableRequestConfig
+): Promise<string> => {
+  const wire = config ? compact(config) : currentWire().wire;
   try {
     const res = await fetch('/api/share', {
       method: 'POST',
@@ -121,7 +127,7 @@ export const generateShareableLink = async (): Promise<string> => {
     });
     if (res.ok) {
       const { id } = (await res.json()) as { id?: string };
-      if (id) return `${window.location.origin}/?s=${id}`;
+      if (id) return `${window.location.origin}/playground?s=${id}`;
     }
   } catch {
     /* fall through */
