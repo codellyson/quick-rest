@@ -4,7 +4,7 @@ import { useDraftStore } from "../use-draft-store";
 import { PopoverAuth } from "./popover-auth";
 import { PopoverEnv } from "./popover-env";
 
-const DRAWER_KEYS = new Set(["headers", "body"]);
+const DRAWER_KEYS = new Set(["headers", "body", "env-manage"]);
 
 export const PopoverStack = () => {
   const openPopovers = useDraftStore((s) => s.openPopovers);

@@ -1,15 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import type { HttpResponse } from "../../utils/http";
 import { Copy, Check } from "lucide-react";
-
-const CodeEditor = dynamic(
-  () =>
-    import("../../components/ui/code-editor").then((m) => m.CodeEditor),
-  { ssr: false, loading: () => <div className="h-full bg-bg/40" /> }
-);
+import { JsonView } from "./json-view";
 
 interface ResultBodyProps {
   response: HttpResponse;
@@ -36,7 +30,7 @@ export const ResultBody = ({ response }: ResultBodyProps) => {
     () => stringify(response.data, contentType),
     [response.data, contentType]
   );
-  const language = isJsonContentType(contentType) ? "json" : "text";
+  const isJson = isJsonContentType(contentType) || typeof response.data === "object";
 
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
@@ -77,16 +71,10 @@ export const ResultBody = ({ response }: ResultBodyProps) => {
           </>
         )}
       </button>
-      {language === "json" ? (
-        <CodeEditor
-          value={text}
-          language="json"
-          readOnly
-          height="100%"
-          className="h-full border-0 rounded-none"
-        />
+      {isJson ? (
+        <JsonView value={text} />
       ) : (
-        <pre className="font-mono text-[12px] text-primary whitespace-pre-wrap break-words leading-[1.5] px-4 py-3 h-full overflow-y-auto">
+        <pre className="font-mono text-[12px] text-primary whitespace-pre-wrap break-words leading-[1.55] px-4 py-3 h-full overflow-y-auto">
           {text}
         </pre>
       )}

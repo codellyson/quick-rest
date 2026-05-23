@@ -7,7 +7,12 @@ import {
   useWorkspaceStore,
 } from "./use-workspace-store";
 
-export type PopoverKey = "body" | "auth" | "env" | "headers";
+export type PopoverKey =
+  | "body"
+  | "auth"
+  | "env"
+  | "headers"
+  | "env-manage";
 
 export interface AuthConfig {
   bearerToken?: string;

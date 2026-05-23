@@ -16,6 +16,7 @@ import { PeekRail } from "./peek-rail";
 import { WorkspaceTabs } from "./workspace-tabs";
 import { HeadersDrawer } from "./headers-drawer";
 import { BodyDrawer } from "./body-drawer";
+import { EnvDrawer } from "./env-drawer";
 
 export const Workspace = () => {
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
@@ -61,6 +62,7 @@ export const Workspace = () => {
 
       <HeadersDrawer />
       <BodyDrawer />
+      <EnvDrawer />
 
       {hasInStack && <PeekRail onShowMore={() => setPaletteOpen(true)} />}
 

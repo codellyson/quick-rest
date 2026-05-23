@@ -100,13 +100,17 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   },
   {
     name: "/env",
-    hint: "switch environment or open env manager",
+    hint: "open environment manager (or switch by name)",
     run: (arg) => {
       const target = arg.trim().toLowerCase();
       const env = useEnvironmentStore.getState();
       if (!target) {
-        useDraftStore.getState().togglePopover("env");
-        useDraftStore.getState().setUrl("");
+        // No arg → open the full management drawer.
+        const d = useDraftStore.getState();
+        if (!d.openPopovers.includes("env-manage")) {
+          d.togglePopover("env-manage");
+        }
+        d.setUrl("");
         return;
       }
       const match = env.environments.find(

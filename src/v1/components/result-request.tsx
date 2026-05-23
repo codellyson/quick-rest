@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import type { Card } from "../types";
 import { MethodPill } from "./method-pill";
 import { Copy, Check } from "lucide-react";
-
-const CodeEditor = dynamic(
-  () =>
-    import("../../components/ui/code-editor").then((m) => m.CodeEditor),
-  { ssr: false, loading: () => <div className="h-[220px] bg-bg/40" /> }
-);
+import { JsonView } from "./json-view";
 
 interface ResultRequestProps {
   card: Card;
@@ -118,13 +112,9 @@ export const ResultRequest = ({ card }: ResultRequestProps) => {
             </button>
           </h3>
           {request.bodyType === "json" ? (
-            <CodeEditor
-              value={request.body}
-              language="json"
-              readOnly
-              height="220px"
-              className="border-0 rounded-none"
-            />
+            <div className="h-[240px] border-t border-border/30">
+              <JsonView value={request.body} />
+            </div>
           ) : (
             <pre className="font-mono text-[12px] text-primary whitespace-pre-wrap break-words leading-[1.5] px-4">
               {request.body}
