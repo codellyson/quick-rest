@@ -1,7 +1,13 @@
-"use client";
-
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, Github } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "JustAPI — API client built for flow state",
+  description:
+    "Type, send, drag, send again. An API client that respects your rhythm: one input, responses as sheets you can stack and recall.",
+  alternates: { canonical: "/" },
+};
 
 const Pillar = ({
   kicker,

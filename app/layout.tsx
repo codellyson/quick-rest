@@ -6,22 +6,31 @@ import { Providers } from './providers';
 import { BUILT_IN_THEMES, DEFAULT_THEME_ID } from '../src/utils/theme-plugins';
 
 const SITE_URL = 'https://justapi.kreativekorna.com';
-const TITLE = 'JustAPI — REST testing without the bloat';
+const TITLE = 'JustAPI — API client built for flow state';
 const DESCRIPTION =
-  'A fast, mobile-first REST API client. Compose, send, save, and replay HTTP requests in the browser. Capture live traffic with the companion extension.';
+  'Type, send, drag, send again. An API client that respects your rhythm: one input, responses as sheets you can stack and recall, no tab-switching, no sidebars, no dropdowns mid-typing.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: TITLE,
+  title: {
+    default: TITLE,
+    template: '%s · JustAPI',
+  },
   description: DESCRIPTION,
   applicationName: 'JustAPI',
   manifest: '/manifest.webmanifest',
+  alternates: {
+    canonical: '/',
+  },
   keywords: [
+    'API client',
     'REST client',
-    'API testing',
     'HTTP client',
+    'API testing',
     'Postman alternative',
     'API debugger',
+    'developer tools',
+    'flow state',
     'JustAPI',
   ],
   authors: [{ name: 'KreativeKorna' }],

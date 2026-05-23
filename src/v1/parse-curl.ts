@@ -138,7 +138,7 @@ export const parseCurl = (raw: string): ParsedRequest | null => {
   let method: HttpMethod = "GET";
   let url = "";
   const headers: Record<string, string> = {};
-  let dataBuffer: string[] = [];
+  const dataBuffer: string[] = [];
   let isUrlEncoded = false;
   let authType: AuthType = "none";
   const authConfig: AuthConfig = {};

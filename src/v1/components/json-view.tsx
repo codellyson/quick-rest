@@ -22,7 +22,7 @@ interface Token {
 }
 
 const TOKEN_RE =
-  /("(?:[^"\\]|\\.)*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b|([\{\}\[\]:,])|(\s+)/g;
+  /("(?:[^"\\]|\\.)*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b|([{}[\]:,])|(\s+)/g;
 
 const tokenize = (text: string): Token[] => {
   const out: Token[] = [];

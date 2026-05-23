@@ -82,7 +82,7 @@ export const InputBar = () => {
       : isDevtools
       ? "Parsed DevTools paste"
       : "Parsed request";
-    const bits = [parsed.method];
+    const bits: string[] = [parsed.method];
     if (headerCount > 0) bits.push(`${headerCount} header${headerCount === 1 ? "" : "s"}`);
     if (parsed.body) bits.push("body");
     if (parsed.authType !== "none") bits.push(parsed.authType);
