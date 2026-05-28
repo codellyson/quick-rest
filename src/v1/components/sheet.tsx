@@ -53,11 +53,10 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
     <Drawer.Root
       open={open}
       onOpenChange={onOpenChange}
-      shouldScaleBackground
       closeThreshold={0.2}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
+        <Drawer.Overlay className="fixed inset-0 z-40 bg-transparent" />
         <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[88dvh] flex-col rounded-t-2xl border border-b-0 border-border bg-bg-secondary shadow-[0_-12px_48px_-12px_rgba(0,0,0,0.45)] outline-none">
           <Drawer.Title className="sr-only">
             {card.method} {card.url}
