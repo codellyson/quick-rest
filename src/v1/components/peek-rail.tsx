@@ -70,57 +70,64 @@ export const PeekRail = ({ onShowMore }: PeekRailProps) => {
           >
             <div
               role="group"
-              className="group w-[min(720px,86vw)] h-9 flex items-center rounded-xl border border-border bg-bg-secondary/95 backdrop-blur-sm shadow-[0_8px_18px_-12px_rgba(0,0,0,0.4)] hover:border-accent hover:scale-[1.04] transition-[transform,border-color,box-shadow] duration-150 ease-out overflow-hidden"
+              className="group relative w-[min(720px,86vw)] h-9 flex items-center rounded-xl border border-border bg-bg-secondary/95 backdrop-blur-sm shadow-[0_8px_18px_-12px_rgba(0,0,0,0.4)] hover:border-accent hover:scale-[1.04] transition-[transform,border-color,box-shadow] duration-150 ease-out overflow-hidden"
             >
               <button
                 type="button"
                 onClick={() => setDisplayed(workspaceId, card.id)}
-                className="flex items-center gap-3 px-4 h-full flex-1 min-w-0"
+                className="flex items-center gap-3 pl-4 pr-3 h-full w-full min-w-0"
                 title="Click to open"
               >
                 <MethodPill method={card.method} />
                 <span className="font-mono text-[12px] text-primary truncate flex-1 text-left">
                   {card.url}
                 </span>
-                {card.response && (
-                  <StatusBadge
-                    status={card.response.status}
-                    className="shrink-0"
-                  />
-                )}
+                {/* Right-edge slot — status by default, actions on hover.
+                    Both share the same position and transition in/out so
+                    nothing reserves layout space when idle. */}
+                <span className="relative flex items-center justify-end h-full shrink-0 w-[60px] group-hover:w-[68px] transition-[width] duration-150 ease-out">
+                  {card.response && (
+                    <span className="absolute inset-y-0 right-0 flex items-center transition-all duration-150 ease-out group-hover:opacity-0 group-hover:translate-x-2 group-hover:scale-95">
+                      <StatusBadge status={card.response.status} />
+                    </span>
+                  )}
+                </span>
               </button>
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const link = await shareCard(card);
-                  useToastStore
-                    .getState()
-                    .showToast(
-                      link ? "info" : "error",
-                      link ? "Share link copied" : "Couldn't share"
-                    );
-                }}
-                className="h-full px-2.5 text-muted hover:text-primary hover:bg-bg/40 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Copy share link"
-                aria-label="Share request"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Delete this request from history?")) {
-                    removeCard(card.id);
-                  }
-                }}
-                className="h-full px-3 text-muted hover:text-danger hover:bg-danger/5 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Delete request"
-                aria-label="Delete request"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+
+              <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center gap-0.5 opacity-0 translate-x-2 transition-all duration-150 ease-out group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const link = await shareCard(card);
+                    useToastStore
+                      .getState()
+                      .showToast(
+                        link ? "info" : "error",
+                        link ? "Share link copied" : "Couldn't share"
+                      );
+                  }}
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted hover:text-primary hover:bg-bg/60"
+                  title="Copy share link"
+                  aria-label="Share request"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this request from history?")) {
+                      removeCard(card.id);
+                    }
+                  }}
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted hover:text-danger hover:bg-danger/10"
+                  title="Delete request"
+                  aria-label="Delete request"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         );
