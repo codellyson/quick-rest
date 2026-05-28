@@ -63,14 +63,22 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
             {card.method} {card.url}
           </Drawer.Title>
 
-          <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-border" />
+          {/* Drag handle — sized for thumb reach (~44px hit area via padding) */}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+            className="mx-auto mt-1 px-8 py-3 shrink-0 group focus:outline-none"
+          >
+            <span className="block h-1.5 w-12 rounded-full bg-border group-hover:bg-muted group-active:bg-muted transition-colors" />
+          </button>
 
-          <header className="flex items-center gap-3 px-5 pt-3 pb-3 shrink-0 border-b border-border/40">
+          <header className="flex items-center gap-2 px-4 sm:px-5 pt-2 pb-3 shrink-0 border-b border-border/40">
             <MethodPill method={card.method} />
             <button
               type="button"
               onClick={onEditUrl}
-              className="font-mono text-[13px] text-primary truncate text-left hover:text-accent transition-colors flex-1"
+              className="font-mono text-[13px] text-primary truncate text-left hover:text-accent transition-colors flex-1 min-w-0"
               title="Click to edit & close"
             >
               {card.url}
@@ -85,22 +93,24 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
               {shareCopied ? (
                 <>
                   <Check className="w-3 h-3" />
-                  copied
+                  <span className="hidden sm:inline">copied</span>
                 </>
               ) : (
                 <>
                   <Share2 className="w-3 h-3" />
-                  share
+                  <span className="hidden sm:inline">share</span>
                 </>
               )}
             </button>
-            <span className="text-[10px] text-muted font-mono shrink-0">
+            <span className="hidden sm:inline text-[10px] text-muted font-mono shrink-0">
               esc · drag to close
             </span>
           </header>
 
-          <div className="flex items-center gap-3 px-5 py-2.5 text-[11px] font-mono text-muted border-b border-border/40 shrink-0">
-            <span style={{ color: accent.text }}>{card.host}</span>
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 px-4 sm:px-5 py-2.5 text-[11px] font-mono text-muted border-b border-border/40 shrink-0">
+            <span style={{ color: accent.text }} className="truncate max-w-[40%]">
+              {card.host}
+            </span>
             {card.env && (
               <span>
                 <span className="opacity-60">ENV </span>
@@ -121,18 +131,18 @@ export const Sheet = ({ card, open, onOpenChange }: SheetProps) => {
             {card.pending && (
               <span className="inline-block animate-pulse">● in flight…</span>
             )}
-            {!card.pending && r && (
+            {!card.pending && r && r.status > 0 && (
               <>
-                <StatusBadge
-                  status={r.status}
-                  text={`${r.status} ${r.statusText}`}
-                />
+                <StatusBadge status={r.status} text={`${r.status} ${r.statusText}`} />
                 <span>{r.time}ms</span>
                 <span>{formatSize(r.size)}</span>
               </>
             )}
+            {!card.pending && r && r.status === 0 && (
+              <StatusBadge status={0} text={r.statusText || 'Failed'} />
+            )}
             {!card.pending && !r && card.error && (
-              <span className="text-danger">{card.error}</span>
+              <span className="text-danger truncate max-w-full">{card.error}</span>
             )}
           </div>
 
